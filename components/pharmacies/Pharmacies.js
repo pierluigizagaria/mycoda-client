@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
-import { View, TextField, Text, Button } from 'react-native-ui-lib';
 import Constants from "expo-constants";
+import { ScrollView } from 'react-native';
+import PharmacyItem from './PharmacyItem';
 
 export default class Pharmacies extends Component {
   constructor(props) {
@@ -10,9 +11,23 @@ export default class Pharmacies extends Component {
 
   render() {
     return (
-      <View>
-        <Text grey20 text10 marginT-10 marginB-70 center>Pharmacies</Text>
-      </View>
+      <ScrollView>
+        <PharmacyItem name="Farmacia Vitti" address="Via Corato, Andria" imgUri="https://reactnative.dev/img/tiny_logo.png"/>
+        <PharmacyItem name="Farmacia Vitti" address="Via Corato, Andria" imgUri="https://reactnative.dev/img/tiny_logo.png" />
+        <PharmacyItem name="Farmacia Vitti" address="Via Corato, Andria" imgUri="https://reactnative.dev/img/tiny_logo.png" />
+        <PharmacyItem name="Farmacia Vitti" address="Via Corato, Andria" imgUri="https://reactnative.dev/img/tiny_logo.png" />
+        <PharmacyItem name="Farmacia Vitti" address="Via Corato, Andria" imgUri="https://reactnative.dev/img/tiny_logo.png" />
+        <PharmacyItem name="Farmacia Vitti" address="Via Corato, Andria" imgUri="https://reactnative.dev/img/tiny_logo.png" />
+        <PharmacyItem name="Farmacia Vitti" address="Via Corato, Andria" imgUri="https://reactnative.dev/img/tiny_logo.png" />
+        <PharmacyItem name="Farmacia Vitti" address="Via Corato, Andria" imgUri="https://reactnative.dev/img/tiny_logo.png" />
+        <PharmacyItem name="Farmacia Vitti" address="Via Corato, Andria" imgUri="https://reactnative.dev/img/tiny_logo.png" />
+        <PharmacyItem name="Farmacia Vitti" address="Via Corato, Andria" imgUri="https://reactnative.dev/img/tiny_logo.png" />
+        <PharmacyItem name="Farmacia Vitti" address="Via Corato, Andria" imgUri="https://reactnative.dev/img/tiny_logo.png" />
+        <PharmacyItem name="Farmacia Vitti" address="Via Corato, Andria" imgUri="https://reactnative.dev/img/tiny_logo.png" />
+        <PharmacyItem name="Farmacia Vitti" address="Via Corato, Andria" imgUri="https://reactnative.dev/img/tiny_logo.png" />
+        <PharmacyItem name="Farmacia Vitti" address="Via Corato, Andria" imgUri="https://reactnative.dev/img/tiny_logo.png" />
+        <PharmacyItem name="Farmacia Vitti" address="Via Corato, Andria" imgUri="https://reactnative.dev/img/tiny_logo.png" />
+      </ScrollView>
     );
   }
 }
