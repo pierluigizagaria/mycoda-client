@@ -3,7 +3,7 @@ import { View, TextField, Text, Button } from 'react-native-ui-lib';
 import Constants from "expo-constants";
 import ChatList from './ChatList'
 
-export default class Chat extends Component {
+export default class Chats extends Component {
   constructor(props) {
     super(props);
     this.state = {};

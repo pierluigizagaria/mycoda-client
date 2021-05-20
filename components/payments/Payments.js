@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { View, TextField, Text, Button } from 'react-native-ui-lib';
 import Constants from "expo-constants";
+import PaymentList from './PaymentList'
 
 export default class Payments extends Component {
   constructor(props) {
@@ -10,8 +11,8 @@ export default class Payments extends Component {
 
   render() {
     return (
-      <View>
-        <Text grey20 text10 marginT-10 marginB-70 center>Payments</Text>
+      <View flex>
+        <PaymentList />
       </View>
     );
   }

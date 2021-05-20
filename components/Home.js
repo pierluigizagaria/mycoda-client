@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { StyleSheet, Text, View } from 'react-native';
 import Pharmacies from './pharmacies/Pharmacies';
-import Chat from './chat/Chat';
+import Chats from './chat/Chats';
 import Payments from './payments/Payments';
 
 const Tab = createMaterialTopTabNavigator();
@@ -20,7 +20,7 @@ export default class Home extends Component {
 				<Tab.Screen name="Pharmacies" component={Pharmacies} 
 					options={{ title: "Farmacie" }}
 				/>
-				<Tab.Screen name="Chat" component={Chat} 
+				<Tab.Screen name="Chat" component={Chats} 
 					options={{ title: "Chat" }}
 				/>
 				<Tab.Screen name="Payments" component={Payments} 

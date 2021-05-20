@@ -14,11 +14,11 @@ export default class PharmacyItem extends Component {
             uri: this.props.imgUri,
           }}
         />
-        <View flex paddingH-10 centerV>
-          <View row spread centerV>
+        <View flex paddingH-10>
+          <View flex row top>
             <Text grey10 text65>{this.props.name}</Text>
           </View>
-          <View row centerV>
+          <View flex row bottom centerV>
             <MaterialCommunityIcons name="map-marker" size={16} color="red"/>
             <Text grey20 text80>{this.props.address}</Text>
           </View>

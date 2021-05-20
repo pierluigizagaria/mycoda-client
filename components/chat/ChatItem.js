@@ -13,12 +13,12 @@ export default class ChatItem extends Component {
 						uri: this.props.imgUri,
 					}}
 				/>
-				<View flex paddingH-10 centerV>
-					<View row spread centerV>
+				<View flex paddingL-10 centerV>
+					<View flex row spread top>
 						<Text grey10 text65>{this.props.name}</Text>
 						<Text grey30 text90H>{this.props.time}</Text>
 					</View>
-					<View row spread centerV>
+					<View flex row spread bottom>
 						<Text grey20 text80>{this.props.message}</Text>
 						{ this.props.badge &&
 							<View style={styles.badge} center centerV background-red30>
@@ -35,8 +35,7 @@ export default class ChatItem extends Component {
 const styles = StyleSheet.create({
 	container: {
 		flexDirection: "row",
-		height: 50,
-		margin: 13,
+		padding: 12,
 		overflow: 'hidden',
 	},
 	logo: {
