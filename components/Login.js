@@ -37,7 +37,7 @@ export default class Login extends Component {
 					/>
 					<View flex row bottom marginB-30 flex centerH>
 						<Text grey10 text70 centerV>Sei una farmacia? </Text>
-						<Button link text70 red30 label="Registrati"/>
+						<Button link text70 red30 label="Accedi"/>
 					</View>
 				</View>
 			</View>

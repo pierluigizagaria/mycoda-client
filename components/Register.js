@@ -6,19 +6,19 @@ export default class Register extends Component {
 	render() {
 		return (
 			<ScrollView>
-				<View flex paddingH-25 paddingT-70 paddingH-30>
-					<Text grey20 text30 marginB-30>Registrati</Text>
-					<Text red30 text60 marginB-10>Email</Text>
+				<View flex paddingH-30 paddingV-40>
+					<Text grey20 text30 marginV-20>Registrati</Text>
+					<Text red30 text65>Email</Text>
 					<TextField text70 placeholder="La tua email" dark10 />
-					<Text red30 text60 marginB-10>Password</Text>
+					<Text red30 text65>Password</Text>
 					<TextField text70 placeholder="Password" secureTextEntry dark10 />
-					<Text red30 text60 marginB-10>Conferma Password</Text>
-					<TextField text70 placeholder="Conferma la password" secureTextEntry dark10 />
-					<Text red30 text60 marginB-10>Nome</Text>
+					<Text red30 text65>Conferma Password</Text>
+					<TextField text70 placeholder="Reinserisci la tua password" secureTextEntry dark10 />
+					<Text red30 text65>Nome</Text>
 					<TextField text70 placeholder="Il tuo nome" dark10 />
-					<Text red30 text60 marginB-10>Cognome</Text>
+					<Text red30 text65>Cognome</Text>
 					<TextField text70 placeholder="Il tuo cognome" dark10 />
-					<Text red30 text60 marginB-10>Codice Fiscale</Text>
+					<Text red30 text65>Codice Fiscale</Text>
 					<TextField text70 placeholder="Il tuo codice fiscale" dark10 />
 					<View flex top>
 						<Button text70 white background-red30 label="Continua" borderRadius={10} marginT-10 />
