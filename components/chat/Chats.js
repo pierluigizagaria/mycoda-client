@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
-import { View, TextField, Text, Button } from 'react-native-ui-lib';
-import Constants from "expo-constants";
-import ChatList from './ChatList'
+import { ScrollView } from 'react-native';
+import ChatItem from './ChatItem';
 
 export default class Chats extends Component {
   constructor(props) {
@@ -11,9 +10,15 @@ export default class Chats extends Component {
 
   render() {
     return (
-      <View flex>
-        <ChatList/>
-      </View>
+      <ScrollView>
+        <ChatItem 
+          navigation={this.props.navigation}
+          name="Farmacia Vitti" 
+          message="Non ho finito" 
+          time="10:32" 
+          imgUri="https://reactnative.dev/img/tiny_logo.png" 
+        />
+      </ScrollView>
     );
   }
 }
