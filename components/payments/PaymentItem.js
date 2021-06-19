@@ -25,8 +25,7 @@ export default class PaymentItem extends Component {
             </View>
           </View>
           <View flex row right centerV>
-            <MaterialCommunityIcons name="currency-eur" size={16} grey20/>
-            <Text numberOfLines={1} grey20 text70 style={styles.text}>{"3.50"}</Text>
+            <Text numberOfLines={1} grey20 text70 style={styles.text}>{"€ 3.50"}</Text>
           </View>
         </View>
       </View>

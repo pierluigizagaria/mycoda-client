@@ -2,19 +2,37 @@ import { ThemeProvider } from '@react-navigation/native';
 import React, { Component } from 'react';
 import { StyleSheet, TouchableHighlight } from 'react-native';
 import { View, Text, Image } from 'react-native-ui-lib';
+import { SocketContext } from '../SocketContext';
 
 export default class ChatItem extends Component {
+	static contextType = SocketContext;
+
+	constructor(props) {
+		super(props);
+		this.state = {};
+	}
+	
+	componentDidMount() {
+		const socket = this.context;
+		this.state.socket = socket;
+	}
+
+	onPress() {
+		this.props.navigation.navigate('chat-room', { 
+			name: this.props.name, 
+			sessionId: this.props.sessionId,
+		});
+	}
+
 	render() {
 		return (
 			<TouchableHighlight 
-				onPress={() => this.props.navigation.navigate('chat-room', { name: this.props.name})} 
+				onPress={() => this.onPress()} 
 				underlayColor="white">
 				<View style={styles.container}>
 					<Image
 						style={styles.logo}
-						source={{
-							uri: this.props.imgUri,
-						}}
+						source={{ uri: this.props.imgUri }}
 					/>
 					<View flex paddingL-10 centerV>
 						<View flex row spread top>

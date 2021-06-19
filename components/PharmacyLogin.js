@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import { View, TextField, Text, Button } from 'react-native-ui-lib';
-import Constants from "expo-constants";
 
 export default class Login extends Component {
 	constructor(props) {
@@ -15,10 +14,10 @@ export default class Login extends Component {
 		return (
 			<View flex paddingH-25 paddingT-120 paddingH-30>
 				<Text grey20 text10 marginT-10 marginB-70 center>MyCoda</Text>
-				<Text grey20 text30 marginB-30>Accedi</Text>
-				<Text red30 text60 marginB-10>Codice Fiscale</Text>
+				<Text grey20 text30 marginB-30>Farmacie</Text>
+				<Text red30 text60 marginB-10>Partita IVA</Text>
 				<TextField text70 dark10 
-					placeholder="Il tuo codice fiscale"
+					placeholder="Partita iva della farmacia"
 					onChangeText={text => this.setState({cf : text})}
 				/>
 				<Text red30 text60 marginB-10>Password</Text>
@@ -32,12 +31,14 @@ export default class Login extends Component {
 						onPress={() => this.props.navigation.navigate('home')}
 					/>
 					<Button link text70 red30 marginT-20
-						label="Registrati"
-						onPress={() => this.props.navigation.navigate('register')}
+						label="Come posso registrarmi?"
+						onPress={() => alert('Schermata di informazioni su affiliamento al servizio.')}
 					/>
 					<View flex row bottom marginB-30 flex centerH>
-						<Text grey10 text70 centerV>Sei una farmacia? </Text>
-						<Button link text70 red30 label="Accedi"/>
+						<Text grey10 text70 centerV>Non sei una farmacia? </Text>
+						<Button link text70 red30 
+							label="Accedi"
+							onPress={() => this.props.navigation.navigate('user-login')}/>
 					</View>
 				</View>
 			</View>

@@ -6,7 +6,7 @@ export default class Register extends Component {
 	render() {
 		return (
 			<ScrollView>
-				<View flex paddingH-30 paddingV-40>
+				<View flex paddingH-30 paddingT-30>
 					<Text grey20 text30 marginV-20>Registrati</Text>
 					<Text red30 text65>Email</Text>
 					<TextField text70 placeholder="La tua email" dark10 />
@@ -26,7 +26,7 @@ export default class Register extends Component {
 							<Text grey10 text70 centerV>Hai già un account? </Text>
 							<Button link text70 red30
 								label="Accedi"
-								onPress={() => this.props.navigation.navigate('login')}
+								onPress={() => this.props.navigation.navigate('user-login')}
 							/>
 						</View>
 					</View>
