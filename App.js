@@ -2,11 +2,11 @@ import React from 'react';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { enableScreens } from 'react-native-screens';
 import { createNativeStackNavigator } from 'react-native-screens/native-stack';
-import { HeaderBackButton } from '@react-navigation/stack';
-import { StyleSheet, Text, View } from 'react-native';
 import { ThemeManager } from 'react-native-ui-lib';
-import Register from './components/Register';
-import Login from './components/Login';
+import { SocketContextProvider } from './components/SocketContext';
+import PharmacyLogin from './components/PharmacyLogin';
+import UserRegister from './components/UserRegister';
+import UserLogin from './components/UserLogin';
 import Home from './components/Home';
 import ChatRoom from './components/chat/ChatRoom';
 
@@ -15,33 +15,39 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-    <NavigationContainer theme={MyCodaTheme}>
-      <Stack.Navigator 
-        initialRouteName="login"
-        screenOptions={{ headerHideShadow: true }}>
-        <Stack.Screen 
-          name="register" 
-          component={Register}
-          options={{ headerShown: false }} />
-        <Stack.Screen 
-          name="login" 
-          component={Login}
-          options={{ headerShown: false }} />
-        <Stack.Screen 
-          name="home" 
-          component={Home}
-          options={{ 
-            headerHideBackButton: true, 
-            headerTitle: "MyCoda" 
-          }}/>
-        <Stack.Screen
-          name="chat-room"
-          component={ChatRoom}
-          options={({ route }) => ({ 
-            title: route.params.name 
-          })} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <SocketContextProvider>
+      <NavigationContainer theme={MyCodaTheme}>
+        <Stack.Navigator 
+          initialRouteName="user-login"
+          screenOptions={{ headerHideShadow: true }}>
+          <Stack.Screen 
+            name="user-register" 
+            component={UserRegister}
+            options={{ headerShown: false }} />
+          <Stack.Screen 
+            name="user-login" 
+            component={UserLogin}
+            options={{ headerShown: false }} />
+          <Stack.Screen
+            name="pharmacy-login"
+            component={PharmacyLogin}
+            options={{ headerShown: false }} />
+          <Stack.Screen 
+            name="home" 
+            component={Home}
+            options={{ 
+              headerHideBackButton: true, 
+              headerTitle: "MyCoda" 
+            }}/>
+          <Stack.Screen
+            name="chat-room"
+            component={ChatRoom}
+            options={({ route }) => ({ 
+              title: route.params.name 
+            })} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </SocketContextProvider>
   );
 }
 
