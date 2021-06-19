@@ -4,9 +4,9 @@ import { enableScreens } from 'react-native-screens';
 import { createNativeStackNavigator } from 'react-native-screens/native-stack';
 import { ThemeManager } from 'react-native-ui-lib';
 import { SocketContextProvider } from './components/SocketContext';
-import PharmacyLogin from './components/PharmacyLogin';
-import UserRegister from './components/UserRegister';
-import UserLogin from './components/UserLogin';
+import PharmacyLogin from './components/auth/PharmacyLogin';
+import UserRegister from './components/auth/UserRegister';
+import UserLogin from './components/auth/UserLogin';
 import Home from './components/Home';
 import ChatRoom from './components/chat/ChatRoom';
 
