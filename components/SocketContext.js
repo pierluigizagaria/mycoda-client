@@ -1,15 +1,12 @@
 
 import React, { Component } from 'react';
 import io from "socket.io-client";
-import { ENDPOINTS } from '../config/constants';
+import { REALTIME } from '../config/config';
 
 export const SocketContext = React.createContext();
 
 export class SocketContextProvider extends Component {
-  constructor() {
-    super();
-    this.socket = io(ENDPOINTS.REALTIME, { jsonp: false });
-  }
+  socket = io(`${REALTIME.HOST}:${REALTIME.PORT}`, { jsonp: false });
   render() {
     return (
       <SocketContext.Provider value={this.socket}>
