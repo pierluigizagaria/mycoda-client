@@ -22,6 +22,11 @@ export default class Chats extends Component {
     })
   }
 
+  componentWillUnmount() {
+    socket.off('connect');
+    socket.off('disconnect');
+  }
+
   render() {
     return (
       <ScrollView>
