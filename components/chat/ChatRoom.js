@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, ActivityIndicator } from 'react-native';
-import { GiftedChat } from 'react-native-gifted-chat';
+import { StyleSheet, View, ActivityIndicator } from 'react-native';
+import { GiftedChat, Actions, ActionsProps } from 'react-native-gifted-chat';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SocketContext } from '../SocketContext';
 
 export default class ChatRoom extends Component {
@@ -76,6 +77,19 @@ export default class ChatRoom extends Component {
           <ActivityIndicator size="large" color="#d3d3d3"/>
         )}
         user={{ _id: 1 }}
+        renderActions={(props) => 
+          <Actions
+            options={{
+              ['Foto']: () => console.log('yeah'),
+              ['Invia Pagamento']: () => console.log('yeah'),
+            }}
+            icon={() => (
+              <MaterialCommunityIcons name="dots-vertical" size={24}
+              />
+            )}
+            onSend={args => console.log(args)}
+            />
+        }
       />
     );
   }
