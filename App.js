@@ -1,4 +1,5 @@
 import React from 'react';
+import { StatusBar, SafeAreaView, StyleSheet  } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { enableScreens } from 'react-native-screens';
 import { createNativeStackNavigator } from 'react-native-screens/native-stack';
@@ -15,50 +16,59 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-    <SocketContextProvider>
-      <NavigationContainer theme={MyCodaTheme}>
-        <Stack.Navigator 
-          initialRouteName="user-login"
-          screenOptions={{ headerHideShadow: true }}>
-          <Stack.Screen 
-            name="user-register" 
-            component={UserRegister}
-            options={{ headerShown: false }} />
-          <Stack.Screen 
-            name="user-login" 
-            component={UserLogin}
-            options={{ headerShown: false }} />
-          <Stack.Screen
-            name="pharmacy-login"
-            component={PharmacyLogin}
-            options={{ headerShown: false }} />
-          <Stack.Screen 
-            name="home" 
-            component={Home}
-            options={{ 
-              headerHideBackButton: true, 
-              headerTitle: "MyCoda" 
-            }}/>
-          <Stack.Screen
-            name="chat-room"
-            component={ChatRoom}
-            options={({ route }) => ({ 
-              title: route.params.name 
-            })} />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </SocketContextProvider>
+    <SafeAreaView style={styles.container}>
+      <StatusBar/>
+      <SocketContextProvider>
+        <NavigationContainer theme={MyCodaTheme}>
+          <Stack.Navigator 
+            screenOptions={{ headerHideShadow: true, headerTopInsetEnabled: false }}>
+            <Stack.Screen 
+              name="user-login" 
+              component={UserLogin}
+              options={{ headerShown: false }} />
+            <Stack.Screen
+              name="user-register"
+              component={UserRegister}
+              options={{ headerShown: false }} />
+            <Stack.Screen
+              name="pharmacy-login"
+              component={PharmacyLogin}
+              options={{ headerShown: false }} />
+            <Stack.Screen 
+              name="home" 
+              component={Home}
+              options={{ 
+                headerHideBackButton: true, 
+                headerTitle: "MyCoda",
+              }}/>
+            <Stack.Screen
+              name="chat-room"
+              component={ChatRoom}
+              options={({ route }) => ({ 
+                title: route.params.name 
+              })} />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </SocketContextProvider>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});
 
 const MyCodaTheme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    primary: 'rgb(255, 45, 25)',
+    primary: '#FF2D00',
   },
 };
 
 ThemeManager.setComponentTheme('TextField', {
-  floatingPlaceholderColor: { default: 'black', error: 'red', focus: 'red', disabled: 'grey' }
+  errorColor: '#ff0033',
+  underlineColor: { default: '#d3d3d3', error: 'red', focus: '#FF2D00', disabled: 'gray' }
 });
