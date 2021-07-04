@@ -13,6 +13,12 @@ export default class Login extends Component {
 		};
 	}
 
+	componentDidMount() {
+		SecureStore.getItemAsync('jwt')
+			.then(jwt => { if (jwt) this.props.navigation.navigate('home'); })
+			.catch(error => console.error(error));
+	}
+
 	login() {
 		const options = {
 			method: 'POST',
@@ -29,9 +35,9 @@ export default class Login extends Component {
 					Alert.alert("Errore", "Credenziali errate");
 					return;
 				}
-				return SecureStore.setItemAsync('jwt', json.accessToken)
+				SecureStore.setItemAsync('jwt', json.accessToken);
+				this.props.navigation.navigate('home');
 			})
-			.then(() => { this.props.navigation.navigate('home'); })
 			.catch((error) => console.error(error))
 	}
 
