@@ -1,29 +1,41 @@
 import React, { Component } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, TouchableHighlight } from 'react-native';
 import { ThemeProvider } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { View, Text, Image } from 'react-native-ui-lib';
 
 export default class PharmacyItem extends Component {
+
+  onPress() {
+    this.props.navigation.navigate('chat-room', {
+      name: this.props.name,
+      sessionId: this.props.sessionId,
+    });
+  }
+
   render() {
     return (
-      <View style={styles.container}>
-        <Image
-          style={styles.logo}
-          source={{
-            uri: this.props.imgUri,
-          }}
-        />
-        <View flex paddingH-10>
-          <View flex row top>
-            <Text grey10 text65>{this.props.name}</Text>
-          </View>
-          <View flex row bottom centerV>
-            <MaterialCommunityIcons name="map-marker" size={16} color="red"/>
-            <Text grey20 text80>{this.props.address}</Text>
+      <TouchableHighlight
+        onPress={() => this.onPress()}
+        underlayColor="white">
+        <View style={styles.container}>
+          <Image
+            style={styles.logo}
+            source={{
+              uri: this.props.imgUri,
+            }}
+          />
+          <View flex paddingH-10>
+            <View flex row top>
+              <Text grey10 text65>{this.props.name}</Text>
+            </View>
+            <View flex row bottom centerV>
+              <MaterialCommunityIcons name="map-marker" size={16} color="red"/>
+              <Text grey20 text80>{this.props.address}</Text>
+            </View>
           </View>
         </View>
-      </View>
+      </TouchableHighlight>
     );
   }
 }
