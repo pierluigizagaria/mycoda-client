@@ -16,17 +16,17 @@ export default class Register extends Component {
 			fiscalCode: '',
 			telephone: '',
 			validation: {
-				arePasswordsDifferent: false,
+				passwordsDifferent: false,
 			}
 		};
 	}
 
 	register() {
 		const validation = {
-				arePasswordsDifferent: this.state.password !== this.state.passwordConfirm,
+				passwordsDifferent: this.state.password !== this.state.passwordConfirm,
 		}
 		this.setState({ validation });
-		if (validation.arePasswordsDifferent) return;
+		if (validation.passwordsDifferent) return;
 		const options = {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
@@ -62,11 +62,11 @@ export default class Register extends Component {
 						onChangeText={(text) => this.state.email = text}/>
 					<Text red30 text65>Password</Text>
 					<TextField text70 placeholder="Password" secureTextEntry dark10 
-						error={this.state.validation.arePasswordsDifferent ? "Le password non coincidono" : ""}
+						error={this.state.validation.passwordsDifferent ? "Le password non coincidono" : ""}
 						onChangeText={(text) => this.state.password = text}/>
 					<Text red30 text65>Conferma Password</Text>
 					<TextField text70 placeholder="Reinserisci la tua password" secureTextEntry dark10
-						error={this.state.validation.arePasswordsDifferent ? "Le password non coincidono" : ""}
+						error={this.state.validation.passwordsDifferent ? "Le password non coincidono" : ""}
 						onChangeText={(text) => this.state.passwordConfirm = text}/>
 					<Text red30 text65>Nome</Text>
 					<TextField text70 placeholder="Il tuo nome" dark10 

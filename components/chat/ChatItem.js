@@ -5,22 +5,18 @@ import { View, Text, Image } from 'react-native-ui-lib';
 import { SocketContext } from '../SocketContext';
 
 export default class ChatItem extends Component {
-	static contextType = SocketContext;
-
 	constructor(props) {
 		super(props);
-		this.state = {};
-	}
-	
-	componentDidMount() {
-		const socket = this.context;
-		this.state.socket = socket;
+		this.state = { 
+			name: '', 
+			id: null 
+		};
 	}
 
 	onPress() {
 		this.props.navigation.navigate('chat-room', { 
 			name: this.props.name, 
-			sessionId: this.props.sessionId,
+			userId: this.props.userId,
 		});
 	}
 

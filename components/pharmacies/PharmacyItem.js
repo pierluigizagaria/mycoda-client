@@ -9,7 +9,7 @@ export default class PharmacyItem extends Component {
   onPress() {
     this.props.navigation.navigate('chat-room', {
       name: this.props.name,
-      sessionId: this.props.sessionId,
+      userId: this.props.userId,
     });
   }
 

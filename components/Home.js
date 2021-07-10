@@ -2,11 +2,11 @@ import React, { Component, useRef } from 'react';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { StyleSheet, Alert, Pressable, View  } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import * as SecureStore from 'expo-secure-store';
-import Pharmacies from './pharmacies/Pharmacies';
+import PharmaciesList from './pharmacies/PharmaciesList';
 import ChatsList from './chat/ChatsList';
 import Payments from './payments/Payments';
 import { API } from '../config/config';
+import userData from '../helpers/userData';
 
 import Menu, { MenuItem, MenuDivider } from 'react-native-material-menu';
 
@@ -15,18 +15,20 @@ const Tab = createMaterialTopTabNavigator();
 export default class Home extends Component {
 	constructor(props) {
 		super(props);
-		const imPharmacy = this.props.route.params?.imPharmacy ?? false;
-		this.state = { imPharmacy };
+		this.state = { loggedAsPharmacy: false };
 		this.toolbarMenu = React.createRef();
 	}
 
 	componentDidMount() {
+		userData.load(data => 
+			data.type === 'pharmacy' ?? this.setState({ loggedAsPharmacy: true}),
+		)
 		this.checkJwtToken();
 		this.setupToolbarMenu();
 	}
 
 	logout() {
-		SecureStore.deleteItemAsync('jwt')
+		userData.delete()
 			.then(() => {
 				this.props.navigation.navigate('user-login');
 			})
@@ -34,25 +36,24 @@ export default class Home extends Component {
 	}
 
 	checkJwtToken() {
-		SecureStore.getItemAsync('jwt')
-			.then(jwt => {
+		userData.load()
+			.then(data => {
 				return fetch(
-					this.state.imPharmacy 
+					data.type === 'pharmacy'
 					? `${API.URL}/api/pharmacies/me` 
 					: `${API.URL}/api/users/me`, {
 					method: 'GET',
 					headers: {
 						'Content-Type': 'application/json',
-						'Authorization': `Bearer ${jwt}`,
+						'Authorization': `Bearer ${data.accessToken}`,
 					},
 				});
 			})
 			.then(response => response.json())
 			.then(json => {
 				if (!('error' in json)) return;
-				this.props.navigation.navigate('user-login');
 				Alert.alert("Errore", "Sessione scaduta");
-				return SecureStore.deleteItemAsync('jwt');
+				return userData.delete();
 			})
 			.catch(error => console.error(error));
 	}
@@ -86,8 +87,8 @@ export default class Home extends Component {
 	render() {
 		return (
 			<Tab.Navigator initialRouteName="Chat" >
-				{ !this.state.imPharmacy && (
-					<Tab.Screen name="pharmacies" component={Pharmacies}
+				{ !this.state.loggedAsPharmacy && (
+					<Tab.Screen name="pharmacies" component={PharmaciesList}
 						options={{ title: "Farmacie" }}
 					/>
 				)}

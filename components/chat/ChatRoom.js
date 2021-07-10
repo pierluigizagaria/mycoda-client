@@ -2,19 +2,22 @@ import React, { Component } from 'react';
 import { StyleSheet, View, ActivityIndicator } from 'react-native';
 import { GiftedChat, Actions, ActionsProps } from 'react-native-gifted-chat';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import * as SecureStore from 'expo-secure-store';
+import { API } from '../../config/config';
 import { SocketContext } from '../SocketContext';
+import userData from '../../helpers/userData';
 
 export default class ChatRoom extends Component {
   static contextType = SocketContext;
 
   constructor(props) {
     super(props);
-    const { sessionId } = this.props.route.params;
+    const { userId } = this.props.route.params;
     this.state = { 
-      messages:[], 
+      messages: [], 
       isLoading: false, 
       shouldLoadMessages: false,
-      sessionId,
+      userId,
     };
     this.chatRef = React.createRef();
     this.loadEarlier = this.loadEarlier.bind(this);
@@ -22,34 +25,51 @@ export default class ChatRoom extends Component {
   }
 
   componentDidMount() {
-    const socket = this.context;
-    this.state.socket = socket;
-    this.setState({ messages: [
-      {
-        _id: 2,
-        text: 'Messaggi Utente',
-        createdAt: new Date(),
-        user: {
-          _id: 1,
-          name: 'React Native',
-          avatar: 'https://placeimg.com/140/140/any',
-        },
-      },
-      {
-        _id: 1,
-        text: 'Messaggi Farmacia',
-        createdAt: new Date('2020-03-23'),
-        user: {
-          _id: 2,
-          name: 'React Native',
-          avatar: 'https://placeimg.com/140/140/any',
-        },
-      },
-    ]});
+    this.fetchMessages();
+    this.setupSocket();
   }
 
   loadEarlier() {
     this.setState({ isLoading: true });
+  }
+
+  setupSocket() {
+    const socket = this.context;
+    this.state.socket = socket;
+  }
+
+  fetchMessages() {
+    this.setState({ refreshing: true });
+    userData.load()
+      .then(data => {
+        fetch(`${API.URL}/api/messages/${this.state.userId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${data.accessToken}`,
+          },
+        })
+          .then(response => response.json())
+          .then(json => {
+            const messages = json.length > 0 ? json.map(message => ({
+              _id: message.id,
+              text: message.content,
+              createdAt: message.time,
+              user: {
+                _id: message.mittente,
+                //name: 'React Native',
+                //avatar: 'https://placeimg.com/140/140/any',
+              },
+            })) : [];
+            this.setState({
+              messages,
+              localUserId: data.id,
+              refreshing: false,
+            });
+          })
+          .catch(error => console.error(error));
+      })
+      .catch(error => console.error(error));
   }
 
   onSend(messages = []) {
@@ -66,6 +86,7 @@ export default class ChatRoom extends Component {
     return (
       <GiftedChat
         ref={this.chatRef}
+        showUserAvatar={false}
         messages={this.state.messages}
         scrollToBottom={true}
         infiniteScroll={true}
@@ -76,7 +97,7 @@ export default class ChatRoom extends Component {
         renderLoadEarlier={() => (
           <ActivityIndicator size="large" color="#d3d3d3"/>
         )}
-        user={{ _id: 1 }}
+        user={{ _id: this.state.localUserId }}
         renderActions={(props) => 
           <Actions
             options={{
@@ -84,8 +105,7 @@ export default class ChatRoom extends Component {
               ['Invia Pagamento']: () => console.log('yeah'),
             }}
             icon={() => (
-              <MaterialCommunityIcons name="dots-vertical" size={24}
-              />
+              <MaterialCommunityIcons name="dots-vertical" size={24}/>
             )}
             onSend={args => console.log(args)}
             />
