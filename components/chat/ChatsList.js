@@ -7,7 +7,7 @@ import { SocketContext } from '../SocketContext';
 import userData from '../../helpers/userData';
 
 export default class Chats extends Component {
-  static contextType = SocketContext
+  static contextType = SocketContext;
 
   constructor(props) {
     super(props);
@@ -21,24 +21,32 @@ export default class Chats extends Component {
   }
 
   componentDidMount() {
-    this.setupSocket();
     this.fetchSessions();
   }
 
-  componentWillUnmount() {
-    this.state.socket.off('connect');
-    this.state.socket.off('disconnect');
+  componentDidUpdate(previousProps, previousState) {
+    this.state.socket = this.context.socket;
+    if (previousState.socket != this.state.socket) {
+      this.registerSocketEvents();
+    }
   }
 
-  setupSocket() {
-    const socket = this.context;
-    this.state.socket = socket;
-    this.state.socket.on('connect', () => {
+  componentWillUnmount() {
+    this.unsetupSocket();
+  }
+
+  registerSocketEvents() {
+    this.state.socket?.on('connect', () => {
       this.setState({ realtimeConnected: true });
     });
-    this.state.socket.on('disconnect', () => {
+    this.state.socket?.on('disconnect', () => {
       this.setState({ realtimeConnected: false });
     })
+  }
+
+  unsetupSocket() {
+    this.state.socket?.off('connect');
+    this.state.socket?.off('disconnect');
   }
 
   fetchSessions() {
@@ -54,7 +62,11 @@ export default class Chats extends Component {
         });
       })
       .then(response => response.json())
-      .then(json => { this.setState({ sessions: json, refreshing: false }); })
+      .then(json => 
+        this.setState({ 
+          sessions: json, 
+          refreshing: false 
+        }))
       .catch(error => console.error(error))
   }
 
@@ -67,14 +79,16 @@ export default class Chats extends Component {
         refreshing={this.state.refreshing}
         renderItem={({ item }) => {
           const date = new Date(item.lastMessage.time);
-          const dateText = `${date.getHours()}:${date.getMinutes()}`
-          return <ChatItem
-            navigation={this.props.navigation}
-            userId={item.pivaFarma}
-            name="ragSociale"
-            message={item.lastMessage.content}
-            time={dateText}
-            imgUri="https://reactnative.dev/img/tiny_logo.png"/>
+          const dateText = `${date.getHours()}:${date.getMinutes()}`;
+          return (
+            <ChatItem
+              navigation={this.props.navigation}
+              userId={item.pivaFarma}
+              name={item.pivaFarma}
+              message={item.lastMessage.content}
+              time={dateText}
+              imgUri="https://reactnative.dev/img/tiny_logo.png"/>
+          );
         }}/>
     );
   }

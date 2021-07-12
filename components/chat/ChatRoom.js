@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import { StyleSheet, View, ActivityIndicator } from 'react-native';
 import { GiftedChat, Actions, ActionsProps } from 'react-native-gifted-chat';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import * as SecureStore from 'expo-secure-store';
 import { API } from '../../config/config';
 import { SocketContext } from '../SocketContext';
 import userData from '../../helpers/userData';
@@ -26,60 +25,75 @@ export default class ChatRoom extends Component {
 
   componentDidMount() {
     this.fetchMessages();
-    this.setupSocket();
+  }
+
+  componentDidUpdate(previousProps, previousState) {
+    this.state.socket = this.context.socket;
+    if (previousState.socket != this.state.socket) {
+      this.registerSocketEvents();
+    }
+  }
+
+  componentWillUnmount() {
+    this.unsetupSocket();
   }
 
   loadEarlier() {
     this.setState({ isLoading: true });
   }
 
-  setupSocket() {
-    const socket = this.context;
-    this.state.socket = socket;
+  registerSocketEvents() {
+    this.state.socket?.on('message', data => {
+      this.setState((previousState) => ({
+        messages: GiftedChat.append(previousState.messages, data.message),
+      }));
+    });
+  }
+
+  unsetupSocket() {
+    this.state.socket?.off('message');
   }
 
   fetchMessages() {
     this.setState({ refreshing: true });
     userData.load()
       .then(data => {
-        fetch(`${API.URL}/api/messages/${this.state.userId}`, {
+        this.state.localUserId = data.id;
+        return fetch(`${API.URL}/api/messages/${this.state.userId}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${data.accessToken}`,
           },
         })
-          .then(response => response.json())
-          .then(json => {
-            const messages = json.length > 0 ? json.map(message => ({
-              _id: message.id,
-              text: message.content,
-              createdAt: message.time,
-              user: {
-                _id: message.mittente,
-                //name: 'React Native',
-                //avatar: 'https://placeimg.com/140/140/any',
-              },
-            })) : [];
-            this.setState({
-              messages,
-              localUserId: data.id,
-              refreshing: false,
-            });
-          })
-          .catch(error => console.error(error));
+      })
+      .then(response => response.json())
+      .then(json => {
+        const messages = json.length > 0 ? json.map(message => ({
+          _id: message.id,
+          text: message.content,
+          createdAt: message.time,
+          user: {
+            _id: message.mittente,
+            //name: 'React Native',
+            //avatar: 'https://placeimg.com/140/140/any',
+          },
+        })) : [];
+        this.setState({
+          messages,
+          refreshing: false,
+        });
       })
       .catch(error => console.error(error));
   }
 
   onSend(messages = []) {
     const [ message ] = messages;
-    const { text } = message;
-    const { sessionId } = this.state;
+    const { userId } = this.state;
     this.setState((previousState) => ({
       messages: GiftedChat.append(previousState.messages, messages),
     }));
-    this.state.socket.emit('message', { sessionId, text });
+    this.state.socket?.emit('message', { to: this.state.userId, message });
   }
   
   render() {
