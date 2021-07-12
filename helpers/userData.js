@@ -3,7 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 
 const DATA_TYPE = {
   USER: 'userData',
-  SECURE: 'secureData',
+  SECURE: 'userSecureData',
 }
 
 const userData = {
