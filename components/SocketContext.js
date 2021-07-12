@@ -25,7 +25,7 @@ export class SocketContextProvider extends Component {
 
   render() {
     return (
-      <SocketContext.Provider value={this.state.socket}>
+      <SocketContext.Provider value={{ socket: this.state.socket }}>
         {this.props.children}
       </SocketContext.Provider>
     );
