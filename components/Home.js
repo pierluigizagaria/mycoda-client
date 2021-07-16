@@ -1,5 +1,6 @@
 import React, { Component, useRef } from 'react';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
+import { CommonActions } from '@react-navigation/native';
 import { StyleSheet, Alert, Pressable, View  } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import PharmaciesList from './pharmacies/PharmaciesList';
@@ -7,30 +8,38 @@ import ChatsList from './chat/ChatsList';
 import Payments from './payments/Payments';
 import { API } from '../config/config';
 import userData from '../helpers/userData';
+import { SocketContext } from './SocketContext';
 
-import Menu, { MenuItem, MenuDivider } from 'react-native-material-menu';
+import Menu, { MenuItem } from 'react-native-material-menu';
 
 const Tab = createMaterialTopTabNavigator();
 
 export default class Home extends Component {
+	static contextType = SocketContext;
+
 	constructor(props) {
 		super(props);
-		this.state = { loggedAsPharmacy: false };
+		const { loggedAsPharmacy } = this.props.route.params;
+		this.state = { loggedAsPharmacy };
 		this.toolbarMenu = React.createRef();
 	}
 
 	componentDidMount() {
-		userData.load(data => 
-			data.type === 'pharmacy' ?? this.setState({ loggedAsPharmacy: true}),
-		)
 		this.checkJwtToken();
 		this.setupToolbarMenu();
 	}
 
 	logout() {
+		this.state.socket = this.context.socket;
 		userData.delete()
 			.then(() => {
-				this.props.navigation.navigate('user-login');
+				this.props.navigation.dispatch(
+					CommonActions.reset({
+						index: 0,
+						routes: [{ name: 'user-login' }],
+					})
+				);
+				this.state.socket.disconnect();
 			})
 			.catch(error => console.error(error));
 	}
@@ -53,7 +62,7 @@ export default class Home extends Component {
 			.then(json => {
 				if (!('error' in json)) return;
 				Alert.alert("Errore", "Sessione scaduta");
-				return userData.delete();
+				this.logout();
 			})
 			.catch(error => console.error(error));
 	}
@@ -87,7 +96,7 @@ export default class Home extends Component {
 	render() {
 		return (
 			<Tab.Navigator initialRouteName="Chat" >
-				{ !this.state.loggedAsPharmacy && (
+				{!this.state.loggedAsPharmacy && (
 					<Tab.Screen name="pharmacies" component={PharmaciesList}
 						options={{ title: "Farmacie" }}
 					/>
