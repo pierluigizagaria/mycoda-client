@@ -1,10 +1,9 @@
 const API = {
-  URL: 'https://api.server.mycoda.it' || '192.168.1.100',
+  URL: 'https://api.server.mycoda.it',
 };
 
 const REALTIME = {
-  HOST: '192.168.1.100',
-  PORT: '8080',
+  HOST: 'https://realtime.server.mycoda.it',
 };
 
 export {
