@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Alert, ScrollView } from 'react-native';
+import { CommonActions } from '@react-navigation/native';
 import { View, TextField, Text, Button } from 'react-native-ui-lib';
 import { API } from '../../config/config';
 import userData from '../../helpers/userData';
@@ -40,7 +41,12 @@ export default class Login extends Component {
 					accessToken: json.accessToken,
 					refreshToken: json.refreshToken,
 				})
-				this.props.navigation.navigate('home');
+				this.props.navigation.dispatch(
+					CommonActions.reset({
+						index: 0,
+						routes: [{ name: 'home', params: { loggedAsPharmacy: true } }],
+					})
+				);
 			})
 			.catch((error) => console.error(error))
 	}

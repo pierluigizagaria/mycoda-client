@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Alert, ScrollView } from 'react-native';
+import { CommonActions } from '@react-navigation/native';
 import { View, TextField, Text, Button } from 'react-native-ui-lib';
 import { API } from '../../config/config';
 import userData from '../../helpers/userData';
@@ -11,12 +12,6 @@ export default class Login extends Component {
 			fiscalCode: '',
 			password: '',
 		};
-	}
-
-	componentDidMount() {
-		new userData.load().then((data) => {
-			if (data.accessToken) this.props.navigation.navigate('home');
-		})
 	}
 
 	login() {
@@ -46,7 +41,12 @@ export default class Login extends Component {
 					accessToken: json.accessToken,
 					refreshToken: json.refreshToken,
 				})
-					.then(() => this.props.navigation.navigate('home'))
+					.then(() => this.props.navigation.dispatch(
+						CommonActions.reset({
+							index: 0,
+							routes: [{ name: 'home', params: { loggedAsPharmacy: false } }],
+						})
+					))
 					.catch(error => {
 						Alert.alert('Errore', 'Si è verificato un errore in fase di login');
 						console.error(error);
