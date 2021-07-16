@@ -7,17 +7,16 @@ import userData from '../helpers/userData';
 export const SocketContext = React.createContext();
 
 export class SocketContextProvider extends Component {
-  socket = io(`${REALTIME.HOST}:${REALTIME.PORT}`, { jsonp: false });
   constructor(props) {
     super(props);
     this.state = { socket: null };
     userData.load().then((data) => 
       this.setState({
-        socket: io(`${REALTIME.HOST}:${REALTIME.PORT}`, {
+        socket: io(`${REALTIME.HOST}`, {
           query: {
             authentication: `Bearer ${data.accessToken}`,
           },
-          jsonp: false
+          jsonp: false,
         })
       })
     );
