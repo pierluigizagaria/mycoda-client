@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import { FlatList } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
 import { API } from '../../config/config';
 import ChatItem from './ChatItem';
 import { SocketContext } from '../SocketContext';
@@ -21,7 +20,9 @@ export default class Chats extends Component {
   }
 
   componentDidMount() {
-    this.fetchSessions();
+    this.props.navigation.addListener('focus', payload => {
+      this.fetchSessions()
+    });
   }
 
   componentDidUpdate(previousProps, previousState) {
@@ -37,9 +38,11 @@ export default class Chats extends Component {
 
   registerSocketEvents() {
     this.state.socket?.on('connect', () => {
+      console.log('Socket connected');
       this.setState({ realtimeConnected: true });
     });
-    this.state.socket?.on('disconnect', () => {
+    this.state.socket?.on('disconnect', reason => {
+      console.log(`Socket disconnected: ${reason}`);
       this.setState({ realtimeConnected: false });
     })
   }
@@ -74,18 +77,19 @@ export default class Chats extends Component {
     return (
       <FlatList
         data={this.state.sessions}
-        keyExtractor={item => item.pivaFarma}
+        keyExtractor={item => item.userId}
         onRefresh={this.fetchSessions}
         refreshing={this.state.refreshing}
         renderItem={({ item }) => {
-          const date = new Date(item.lastMessage.time);
+          const date = new Date(item?.lastMessage.time);
           const dateText = `${date.getHours()}:${date.getMinutes()}`;
           return (
             <ChatItem
               navigation={this.props.navigation}
-              userId={item.pivaFarma}
-              name={item.pivaFarma}
-              message={item.lastMessage.content}
+              userId={item?.userId}
+              name={item?.displayName}
+              message={item?.lastMessage.content}
+              badge={item?.newMessagesCount}
               time={dateText}
               imgUri="https://reactnative.dev/img/tiny_logo.png"/>
           );

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { StyleSheet, View, ActivityIndicator } from 'react-native';
-import { GiftedChat, Actions, ActionsProps } from 'react-native-gifted-chat';
+import { GiftedChat, Actions, ActionsProps, Bubble } from 'react-native-gifted-chat';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { API } from '../../config/config';
 import { SocketContext } from '../SocketContext';
@@ -13,12 +13,11 @@ export default class ChatRoom extends Component {
     super(props);
     const { userId } = this.props.route.params;
     this.state = { 
+      userId,
       messages: [], 
       isLoading: false, 
-      shouldLoadMessages: false,
-      userId,
+      shouldLoadMessages: true,
     };
-    this.chatRef = React.createRef();
     this.loadEarlier = this.loadEarlier.bind(this);
     this.onSend = this.onSend.bind(this);
   }
@@ -40,10 +39,11 @@ export default class ChatRoom extends Component {
 
   loadEarlier() {
     this.setState({ isLoading: true });
+    console.log("Loading more")
   }
 
   registerSocketEvents() {
-    this.state.socket?.on('message', data => {
+    this.state.socket?.on('privateMessage', data => {
       this.setState((previousState) => ({
         messages: GiftedChat.append(previousState.messages, data.message),
       }));
@@ -51,7 +51,7 @@ export default class ChatRoom extends Component {
   }
 
   unsetupSocket() {
-    this.state.socket?.off('message');
+    this.state.socket?.off('privateMessage');
   }
 
   fetchMessages() {
@@ -59,7 +59,7 @@ export default class ChatRoom extends Component {
     userData.load()
       .then(data => {
         this.state.localUserId = data.id;
-        return fetch(`${API.URL}/api/messages/${this.state.userId}`, {
+        return fetch(`${API.URL}/api/messages/${this.state.userId}?limit=20`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -87,21 +87,45 @@ export default class ChatRoom extends Component {
       .catch(error => console.error(error));
   }
 
+  postMessage({ content, type }) {
+    userData.load()
+      .then(data => 
+        fetch(`${API.URL}/api/messages/${this.state.userId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${data.accessToken}`,
+          },
+          body: JSON.stringify({
+            content,
+            msgType: type,
+          })
+        })
+      )
+      .then((response) => response.json())
+      .then((json) => {
+        if ('error' in json) {
+          console.error(json);
+          return;
+        }
+      })
+      .catch((error) => console.error(error))
+  }
+
   onSend(messages = []) {
     const [ message ] = messages;
     const { userId } = this.state;
     this.setState((previousState) => ({
       messages: GiftedChat.append(previousState.messages, messages),
     }));
-    this.state.socket?.emit('message', { to: this.state.userId, message });
+    this.postMessage({ content: message.text, type: 2});
+    this.state.socket?.emit('privateMessage', { to: userId, message });
   }
   
   render() {
     return (
       <GiftedChat
-        ref={this.chatRef}
-        showUserAvatar={false}
-        messages={this.state.messages}
+        renderAvatar ={null}
         scrollToBottom={true}
         infiniteScroll={true}
         onSend={this.onSend}
@@ -111,7 +135,19 @@ export default class ChatRoom extends Component {
         renderLoadEarlier={() => (
           <ActivityIndicator size="large" color="#d3d3d3"/>
         )}
+        messages={this.state.messages}
         user={{ _id: this.state.localUserId }}
+        renderBubble={props => {
+          return (
+            <Bubble
+              {...props}
+              textStyle={{ left: { color: 'white' }}}
+              timeTextStyle={{ left: { color: 'white' }}}
+              wrapperStyle={{ left: { backgroundColor: '#FF6947' }}}
+            />
+          );
+        }}
+        /*
         renderActions={(props) => 
           <Actions
             options={{
@@ -124,6 +160,7 @@ export default class ChatRoom extends Component {
             onSend={args => console.log(args)}
             />
         }
+        */
       />
     );
   }

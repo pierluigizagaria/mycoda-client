@@ -12,7 +12,6 @@ import UserLogin from './components/auth/UserLogin';
 import Home from './components/Home';
 import ChatRoom from './components/chat/ChatRoom';
 import userData from './helpers/userData';
-import { ALWAYS_THIS_DEVICE_ONLY } from 'expo-secure-store';
 
 enableScreens();
 const Stack = createNativeStackNavigator();

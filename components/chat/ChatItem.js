@@ -2,7 +2,6 @@ import { ThemeProvider } from '@react-navigation/native';
 import React, { Component } from 'react';
 import { StyleSheet, TouchableHighlight } from 'react-native';
 import { View, Text, Image } from 'react-native-ui-lib';
-import { SocketContext } from '../SocketContext';
 
 export default class ChatItem extends Component {
 	constructor(props) {
@@ -36,8 +35,12 @@ export default class ChatItem extends Component {
 							<Text grey30 text90H>{this.props.time}</Text>
 						</View>
 						<View flex row spread bottom>
-							<Text grey20 text80>{this.props.message}</Text>
-							{this.props.badge &&
+							<Text text80
+								style={{
+									color: this.props.badge > 0 ? 'orange' : 'gray',
+								}}
+							>{this.props.message}</Text>
+							{this.props.badge > 0 &&
 								<View style={styles.badge} center centerV background-red30>
 									<Text white text90>{this.props.badge}</Text>
 								</View>
