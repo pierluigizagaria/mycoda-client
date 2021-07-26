@@ -12,6 +12,7 @@ import UserLogin from './components/auth/UserLogin';
 import Home from './components/Home';
 import ChatRoom from './components/chat/ChatRoom';
 import userData from './helpers/userData';
+import AuthContext from './components/AuthContext';
 
 enableScreens();
 const Stack = createNativeStackNavigator();
@@ -20,7 +21,7 @@ export default class App extends Component {
 
   constructor(props) {
     super(props);
-    this.state = { loggedIn: false, loading: true, loggedAsPharmacy: false };
+    this.state = { isSignedIn: false, loading: true, signedInAsPharmacy: false };
   }
 
   componentDidMount() {
@@ -29,8 +30,8 @@ export default class App extends Component {
       .then(data => {
         this.setState({ 
           loading: false,
-          loggedIn: !!data?.accessToken,
-          loggedAsPharmacy: data?.type === 'pharmacy', 
+          isSignedIn: !!data?.accessToken,
+          signedInAsPharmacy: data?.type === 'pharmacy', 
         });
         return SplashScreen.hideAsync()
       })
@@ -44,43 +45,56 @@ export default class App extends Component {
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar />
-        <SocketContextProvider>
-          <NavigationContainer theme={MyCodaTheme}>
-            <Stack.Navigator
-              initialRouteName={this.state.loggedIn ? "home" : "user-login"}
-              screenOptions={{ 
-                headerHideShadow: true, 
-                headerTopInsetEnabled: false 
-              }}>
-              <Stack.Screen
-                name="user-login"
-                component={UserLogin}
-                options={{ headerShown: false }} />
-              <Stack.Screen
-                name="user-register"
-                component={UserRegister}
-                options={{ headerShown: false }} />
-              <Stack.Screen
-                name="pharmacy-login"
-                component={PharmacyLogin}
-                options={{ headerShown: false }} />
-              <Stack.Screen
-                name="home"
-                component={Home}
-                initialParams={{ loggedAsPharmacy: this.state.loggedAsPharmacy}}
-                options={{
-                  headerHideBackButton: true,
-                  headerTitle: "MyCoda",
-                }} />
-              <Stack.Screen
-                name="chat-room"
-                component={ChatRoom}
-                options={({ route }) => ({
-                  title: route.params.name
-                })} />
-            </Stack.Navigator>
-          </NavigationContainer>
-        </SocketContextProvider>
+        <NavigationContainer theme={MyCodaTheme}>
+          <AuthContext.Provider value={{
+            signIn: (signedInAsPharmacy = false) => {
+              this.setState({ isSignedIn: true, signedInAsPharmacy });
+            },
+            signOut: () => {
+              this.setState({ isSignedIn: false });
+            }
+          }}>
+              {!this.state.isSignedIn ? (
+                <>
+                  <Stack.Navigator
+                    screenOptions={{
+                      headerHideShadow: true,
+                      headerTopInsetEnabled: false,
+                      headerShown: false,
+                    }}>
+                    <Stack.Screen name="user-login" component={UserLogin}/>
+                    <Stack.Screen name="user-register" component={UserRegister}/>
+                    <Stack.Screen name="pharmacy-login" component={PharmacyLogin}/>
+                  </Stack.Navigator>
+                </>
+              ) : (
+                <>
+                  <SocketContextProvider>
+                    <Stack.Navigator
+                      screenOptions={{
+                        headerHideShadow: true,
+                        headerTopInsetEnabled: false
+                      }}>
+                      <Stack.Screen
+                        name="home"
+                        component={Home}
+                        initialParams={{ signedInAsPharmacy: this.state.signedInAsPharmacy }}
+                        options={{
+                          headerHideBackButton: true,
+                          headerTitle: "MyCoda",
+                        }}
+                      />
+                      <Stack.Screen
+                        name="chat-room"
+                        component={ChatRoom}
+                        options={({ route }) => ({ title: route.params.name })}
+                      />
+                    </Stack.Navigator>
+                  </SocketContextProvider>
+                </>
+              )}
+          </AuthContext.Provider>
+        </NavigationContainer>
       </SafeAreaView>
     );
   } 
