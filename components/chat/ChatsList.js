@@ -1,59 +1,68 @@
-import React, { Component } from 'react';
+import React, {useEffect, useState, useContext } from 'react';
 import { FlatList } from 'react-native';
 import { API } from '../../config/config';
 import ChatItem from './ChatItem';
-import { SocketContext } from '../SocketContext';
 import userData from '../../helpers/userData';
+import { SocketContext } from '../SocketContext';
 
-export default class Chats extends Component {
-  static contextType = SocketContext;
+export default function Chats() {
 
-  constructor(props) {
-    super(props);
-    this.state = { 
-      sessions: [],
-      realtimeConnected: false, 
-      socket: null, 
-      refreshing: false, 
+  const [sessions, setSessions] = useState([]);
+  const [socketConnected, setSocketConnected] = useState(false); 
+  const [refreshing, setRefreshing] = useState(false);
+  const { 
+    socket, 
+    connect: connectSocket, 
+    disconnect: disconnectSocket
+  } = useContext(SocketContext);
+
+  useEffect(() => {
+    fetchSessions();
+    connectSocket();
+    return () => { 
+      disconnectSocket(); 
     };
-    this.fetchSessions = this.fetchSessions.bind(this);
-  }
+  }, []);
 
-  componentDidMount() {
-    this.props.navigation.addListener('focus', payload => {
-      this.fetchSessions()
-    });
-  }
-
-  componentDidUpdate(previousProps, previousState) {
-    this.state.socket = this.context.socket;
-    if (previousState.socket != this.state.socket) {
-      this.registerSocketEvents();
+  useEffect(() => {
+    if (!socket) return;
+    socket.on('connect', onSocketConnect);
+    socket.on('disconnect', onSocketDisconnect);
+    socket.on('privateMessage', onSocketPrivateMessage);
+    return () => {
+      socket.off('connect', onSocketConnect);
+      socket.off('disconnect', onSocketDisconnect);
+      socket.off('privateMessage', onSocketPrivateMessage);
     }
-  }
+  }, [socket, sessions]);
 
-  componentWillUnmount() {
-    this.unsetupSocket();
-  }
+  const onSocketConnect = () => {
+    console.log('Socket connected');
+    setSocketConnected(true);
+  };
 
-  registerSocketEvents() {
-    this.state.socket?.on('connect', () => {
-      console.log('Socket connected');
-      this.setState({ realtimeConnected: true });
-    });
-    this.state.socket?.on('disconnect', reason => {
-      console.log(`Socket disconnected: ${reason}`);
-      this.setState({ realtimeConnected: false });
-    })
-  }
+  const onSocketDisconnect = (reason) => {
+    console.log(`Socket disconnected: ${reason}`);
+    setSocketConnected(false);
+  };
 
-  unsetupSocket() {
-    this.state.socket?.off('connect');
-    this.state.socket?.off('disconnect');
-  }
+  const onSocketPrivateMessage = (payload) => {
+    const updatedSessions = sessions.map(session => (
+      session.userId === payload.from ? ({
+        ...session,
+        newMessagesCount: ++session.newMessagesCount,
+        lastMessage: {
+          ...session.lastMessage,
+          content: payload.message.text,
+          time: payload.message.createdAt,
+        }
+      }) : session
+    ));
+    setSessions([...updatedSessions]);
+  };
 
-  fetchSessions() {
-    this.setState({ refreshing: true });
+  const fetchSessions = () => {
+    setRefreshing(true);
     userData.load()
       .then(data => {
         return fetch(`${API.URL}/api/sessions/open`, {
@@ -65,35 +74,27 @@ export default class Chats extends Component {
         });
       })
       .then(response => response.json())
-      .then(json => 
-        this.setState({ 
-          sessions: json, 
-          refreshing: false 
-        }))
+      .then(json => {
+        setSessions(json);
+        setRefreshing(false);
+      })
       .catch(error => console.error(error))
-  }
+  };
 
-  render() {
-    return (
-      <FlatList
-        data={this.state.sessions}
-        keyExtractor={item => item.userId}
-        onRefresh={this.fetchSessions}
-        refreshing={this.state.refreshing}
-        renderItem={({ item }) => {
-          const date = new Date(item?.lastMessage.time);
-          const dateText = `${date.getHours()}:${date.getMinutes()}`;
-          return (
-            <ChatItem
-              navigation={this.props.navigation}
-              userId={item?.userId}
-              name={item?.displayName}
-              message={item?.lastMessage.content}
-              badge={item?.newMessagesCount}
-              time={dateText}
-              imgUri="https://reactnative.dev/img/tiny_logo.png"/>
-          );
-        }}/>
-    );
-  }
+  return (
+    <FlatList
+      data={sessions}
+      onRefresh={fetchSessions}
+      refreshing={refreshing}
+      keyExtractor={item => item.userId}
+      renderItem={({ item }) => (
+        <ChatItem
+          userId={item.userId}
+          name={item.displayName}
+          message={item.lastMessage.content}
+          badge={item.newMessagesCount}
+          time={item.lastMessage.time}
+          imgUri="https://reactnative.dev/img/tiny_logo.png"/>
+      )}/>
+  );
 }

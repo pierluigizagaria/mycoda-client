@@ -1,65 +1,68 @@
-import React, { Component } from 'react';
-import { StyleSheet, View, ActivityIndicator } from 'react-native';
+import React, { useContext, useEffect, useState } from 'react';
+import { StyleSheet, View, ActivityIndicator, Alert } from 'react-native';
 import { GiftedChat, Actions, ActionsProps, Bubble } from 'react-native-gifted-chat';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import 'dayjs/locale/it';
 import { API } from '../../config/config';
 import { SocketContext } from '../SocketContext';
 import userData from '../../helpers/userData';
 
-export default class ChatRoom extends Component {
-  static contextType = SocketContext;
 
-  constructor(props) {
-    super(props);
-    const { userId } = this.props.route.params;
-    this.state = { 
-      userId,
-      messages: [], 
-      isLoading: false, 
-      shouldLoadMessages: true,
-    };
-    this.loadEarlier = this.loadEarlier.bind(this);
-    this.onSend = this.onSend.bind(this);
-  }
+export default function ChatRoom({route}) {
 
-  componentDidMount() {
-    this.fetchMessages();
-  }
+  const [localUserId, setLocalUserId] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [messagesOffset, setMessagesOffset] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [shouldLoadMessages, setShouldLoadMessages] = useState(true);
 
-  componentDidUpdate(previousProps, previousState) {
-    this.state.socket = this.context.socket;
-    if (previousState.socket != this.state.socket) {
-      this.registerSocketEvents();
-    }
-  }
+  const { socket } = useContext(SocketContext);
+  const userId = route.params.userId;
+  const MESSAGES_PER_PAGE = 30;
 
-  componentWillUnmount() {
-    this.unsetupSocket();
-  }
-
-  loadEarlier() {
-    this.setState({ isLoading: true });
-    console.log("Loading more")
-  }
-
-  registerSocketEvents() {
-    this.state.socket?.on('privateMessage', data => {
-      this.setState((previousState) => ({
-        messages: GiftedChat.append(previousState.messages, data.message),
-      }));
+  useEffect(() => {
+    fetchMessages(messagesOffset, MESSAGES_PER_PAGE)
+    .then(messages => {
+      setMessagesOffset(prevOffset => prevOffset + messages.length);
+      setMessages(messages)
     });
-  }
+  }, []);
 
-  unsetupSocket() {
-    this.state.socket?.off('privateMessage');
-  }
+  useEffect(() => {
+    if (!socket) return;
+    socket.on('privateMessage', onSocketPrivateMessage);
+    return () => {
+      socket.off('privateMessage', onSocketPrivateMessage);
+    };
+  }, [socket]);
 
-  fetchMessages() {
-    this.setState({ refreshing: true });
-    userData.load()
+  function emitSocketPrivateMessage(userId, message) {
+    if (!socket) {
+      Alert.alert('Errore nel invio del messaggio');
+      return;
+    }
+    socket.emit('privateMessage', { to: userId, message });
+  };
+
+  function loadEarlier() {
+    setLoading(true);
+    fetchMessages(messagesOffset, MESSAGES_PER_PAGE)
+      .then(messages => {
+        setMessagesOffset(prevOffset => prevOffset + messages.length);
+        setMessages(previousMessages => (GiftedChat.prepend(previousMessages, messages)));
+        setLoading(false);
+    });
+  };
+
+  function onSocketPrivateMessage(data) {
+    setMessages((previousMessages) => (GiftedChat.append(previousMessages, data.message)));
+  };
+
+  function fetchMessages(offset, limit) {
+    return userData.load()
       .then(data => {
-        this.state.localUserId = data.id;
-        return fetch(`${API.URL}/api/messages/${this.state.userId}?limit=20`, {
+        setLocalUserId(data.id);
+        return fetch(`${API.URL}/api/messages/${userId}?offset=${offset}&limit=${limit}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -69,28 +72,19 @@ export default class ChatRoom extends Component {
       })
       .then(response => response.json())
       .then(json => {
-        const messages = json.length > 0 ? json.map(message => ({
+        return json.length > 0 ? json.map(message => ({
           _id: message.id,
           text: message.content,
           createdAt: message.time,
-          user: {
-            _id: message.mittente,
-            //name: 'React Native',
-            //avatar: 'https://placeimg.com/140/140/any',
-          },
+          user: { _id: message.mittente },
         })) : [];
-        this.setState({
-          messages,
-          refreshing: false,
-        });
       })
-      .catch(error => console.error(error));
-  }
+  };
 
-  postMessage({ content, type }) {
+  function postMessage({ content, type }) {
     userData.load()
       .then(data => 
-        fetch(`${API.URL}/api/messages/${this.state.userId}`, {
+        fetch(`${API.URL}/api/messages/${userId}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -110,60 +104,56 @@ export default class ChatRoom extends Component {
         }
       })
       .catch((error) => console.error(error))
-  }
+  };
 
-  onSend(messages = []) {
+  function onSend(messages = []) {
     const [ message ] = messages;
-    const { userId } = this.state;
-    this.setState((previousState) => ({
-      messages: GiftedChat.append(previousState.messages, messages),
-    }));
-    this.postMessage({ content: message.text, type: 2});
-    this.state.socket?.emit('privateMessage', { to: userId, message });
-  }
+    setMessages((previousMessages) => (GiftedChat.append(previousMessages, messages)));
+    postMessage({ content: message.text, type: 2});
+    emitSocketPrivateMessage(userId, message);
+  };
   
-  render() {
-    return (
-      <GiftedChat
-        renderAvatar ={null}
-        scrollToBottom={true}
-        infiniteScroll={true}
-        onSend={this.onSend}
-        onLoadEarlier={this.loadEarlier}
-        loadEarlier={this.state.shouldLoadMessages}
-        isLoadingEarlier={this.state.isLoading}
-        renderLoadEarlier={() => (
-          <ActivityIndicator size="large" color="#d3d3d3"/>
-        )}
-        messages={this.state.messages}
-        user={{ _id: this.state.localUserId }}
-        renderBubble={props => {
-          return (
-            <Bubble
-              {...props}
-              textStyle={{ left: { color: 'white' }}}
-              timeTextStyle={{ left: { color: 'white' }}}
-              wrapperStyle={{ left: { backgroundColor: '#FF6947' }}}
-            />
-          );
-        }}
-        /*
-        renderActions={(props) => 
-          <Actions
-            options={{
-              ['Foto']: () => console.log('yeah'),
-              ['Invia Pagamento']: () => console.log('yeah'),
-            }}
-            icon={() => (
-              <MaterialCommunityIcons name="dots-vertical" size={24}/>
-            )}
-            onSend={args => console.log(args)}
-            />
-        }
-        */
-      />
-    );
-  }
+  return (
+    <GiftedChat
+      locale={'it'}
+      renderAvatar={null}
+      scrollToBottom={true}
+      infiniteScroll={true}
+      onSend={onSend}
+      onLoadEarlier={loadEarlier}
+      loadEarlier={shouldLoadMessages}
+      isLoadingEarlier={loading}
+      renderLoadEarlier={() => (
+        <ActivityIndicator size="large" color="#d3d3d3"/>
+      )}
+      messages={messages}
+      user={{ _id: localUserId }}
+      renderBubble={props => {
+        return (
+          <Bubble
+            {...props}
+            textStyle={{ left: { color: 'white' }}}
+            timeTextStyle={{ left: { color: 'white' }}}
+            wrapperStyle={{ left: { backgroundColor: '#FF6947' }}}
+          />
+        );
+      }}
+      /*
+      renderActions={(props) => 
+        <Actions
+          options={{
+            ['Foto']: () => console.log('yeah'),
+            ['Invia Pagamento']: () => console.log('yeah'),
+          }}
+          icon={() => (
+            <MaterialCommunityIcons name="dots-vertical" size={24}/>
+          )}
+          onSend={args => console.log(args)}
+          />
+      }
+      */
+    />
+  );
 }
 
 const styles = StyleSheet.create({

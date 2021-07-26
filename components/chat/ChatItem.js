@@ -1,56 +1,54 @@
-import { ThemeProvider } from '@react-navigation/native';
-import React, { Component } from 'react';
+import React from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { StyleSheet, TouchableHighlight } from 'react-native';
 import { View, Text, Image } from 'react-native-ui-lib';
+import dayjs from 'dayjs';
 
-export default class ChatItem extends Component {
-	constructor(props) {
-		super(props);
-		this.state = { 
-			name: '', 
-			id: null 
-		};
+export default function ChatItem({
+	userId,
+	imgUri,
+	name,
+	time,
+	badge,
+	message
+}) {
+
+	const navigation = useNavigation();
+
+	const onPress = () => {
+		navigation.navigate('chat-room', { name, userId });
 	}
 
-	onPress() {
-		this.props.navigation.navigate('chat-room', { 
-			name: this.props.name, 
-			userId: this.props.userId,
-		});
-	}
-
-	render() {
-		return (
-			<TouchableHighlight 
-				onPress={() => this.onPress()} 
-				underlayColor="white">
-				<View style={styles.container}>
-					<Image
-						style={styles.logo}
-						source={{ uri: this.props.imgUri }}
-					/>
-					<View flex paddingL-10 centerV>
-						<View flex row spread top>
-							<Text grey10 text65>{this.props.name}</Text>
-							<Text grey30 text90H>{this.props.time}</Text>
-						</View>
-						<View flex row spread bottom>
-							<Text text80
-								style={{
-									color: this.props.badge > 0 ? 'orange' : 'gray',
-								}}
-							>{this.props.message}</Text>
-							{this.props.badge > 0 &&
-								<View style={styles.badge} center centerV background-red30>
-									<Text white text90>{this.props.badge}</Text>
-								</View>
-							}
-						</View>
+	return (
+		<TouchableHighlight 
+			onPress={onPress} 
+			underlayColor="white">
+			<View style={styles.container}>
+				<Image
+					style={styles.logo}
+					source={{ uri: imgUri }}
+				/>
+				<View flex paddingL-10 centerV>
+					<View flex row spread top>
+						<Text grey10 text65>{name}</Text>
+						<Text grey30 text90H>{dayjs(time).format('HH:mm')}</Text>
+					</View>
+					<View flex row spread bottom>
+						<Text text80
+							style={{
+								color: badge > 0 ? 'orange' : 'gray',
+							}}
+						>{message}</Text>
+						{badge > 0 &&
+							<View style={styles.badge} center centerV background-red30>
+								<Text white text90>{badge}</Text>
+							</View>
+						}
 					</View>
 				</View>
-			</TouchableHighlight>
-		);
-	}
+			</View>
+		</TouchableHighlight>
+	);
 }
 
 const styles = StyleSheet.create({
