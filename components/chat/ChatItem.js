@@ -24,23 +24,19 @@ export default function ChatItem({
 			onPress={onPress} 
 			underlayColor="white">
 			<View style={styles.container}>
-				<Image
-					style={styles.logo}
-					source={{ uri: imgUri }}
+				<Image style={styles.logo} source={{ uri: imgUri }}
 				/>
 				<View flex paddingL-10 centerV>
 					<View flex row spread top>
 						<Text grey10 text65>{name}</Text>
-						<Text grey30 text90H>{dayjs(time).format('HH:mm')}</Text>
+						<Text grey30 text90H >{dayjs(time).format('HH:mm')}</Text>
 					</View>
 					<View flex row spread bottom>
-						<Text text80
-							style={{
-								color: badge > 0 ? 'orange' : 'gray',
-							}}
-						>{message}</Text>
+						<View flex>
+							<Text numberOfLines={1} text80 style={{ color: badge > 0 ? 'orange' : 'gray', }}>{message}</Text>
+						</View>
 						{badge > 0 &&
-							<View style={styles.badge} center centerV background-red30>
+							<View style={styles.badge} center centerV bg-primaryColor>
 								<Text white text90>{badge}</Text>
 							</View>
 						}
