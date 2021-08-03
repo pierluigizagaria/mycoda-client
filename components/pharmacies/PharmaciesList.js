@@ -3,7 +3,7 @@ import { FlatList } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { API } from '../../config/config';
 import PharmacyItem from './PharmacyItem';
-import userData from '../../helpers/userData';
+import localUserData from '../../helpers/localUserData';
 
 export default class Pharmacies extends Component {
   constructor(props) {
@@ -21,7 +21,7 @@ export default class Pharmacies extends Component {
 
   fetchPharmacies() {
     this.setState({ refreshing: true });
-    userData.load()
+    localUserData.load()
       .then(data => {
         return fetch(`${API.URL}/api/pharmacies`, {
           method: 'GET',

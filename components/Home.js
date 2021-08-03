@@ -7,13 +7,16 @@ import PharmaciesList from './pharmacies/PharmaciesList';
 import ChatsList from './chat/ChatsList';
 import Payments from './payments/Payments';
 import { API } from '../config/config';
-import userData from '../helpers/userData';
+import localUserData from '../helpers/localUserData';
 import AuthContext from './AuthContext';
 
 import Menu, { MenuItem } from 'react-native-material-menu';
 import { useEffect } from 'react';
 
 export default function Home({ route }) {
+
+	const { localUser } = route.params;
+	const { id: localUserId, type: loginType, accessToken } = localUser;
 
 	const navigation = useNavigation();
 
@@ -50,30 +53,24 @@ export default function Home({ route }) {
 	}
 
 	const	testJWTToken = () => {
-		userData.load()
-			.then(data => {
-				return fetch(
-					data.type === 'pharmacy'
-						? `${API.URL}/api/pharmacies/me`
-						: `${API.URL}/api/users/me`, {
-					method: 'GET',
-					headers: {
-						'Content-Type': 'application/json',
-						'Authorization': `Bearer ${data.accessToken}`,
-					},
-				});
-			})
-			.then(response => response.json())
-			.then(json => {
-				if (!('error' in json)) return;
-				Alert.alert("Errore", "Sessione scaduta");
-				clearDataSignOut();
-			})
-			.catch(error => console.error(error));
+		fetch(loginType === 'pharmacy' ? `${API.URL}/api/pharmacies/me` : `${API.URL}/api/users/me`, {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${accessToken}`,
+			},
+		})
+		.then(response => response.json())
+		.then(json => {
+			if (!('error' in json)) return;
+			Alert.alert("Errore", "Sessione scaduta");
+			clearDataSignOut();
+		})
+		.catch(error => console.error(error));
 	}
 
  const clearDataSignOut = () => {
-		userData.delete()
+		localUserData.delete()
 			.then(() => {
 				signOut();
 			})
@@ -82,15 +79,18 @@ export default function Home({ route }) {
 
 	return (
 		<Tab.Navigator initialRouteName="chats" >
-			{!route.params.signedInAsPharmacy && (
+			{!loginType === 'pharmacy' && (
 				<Tab.Screen name="pharmacies" component={PharmaciesList}
+					initialParams={{ localUser }}
 					options={{ title: "Farmacie" }}
 				/>
 			)}
 			<Tab.Screen name="chats" component={ChatsList}
+				initialParams={{ localUser }}
 				options={{ title: "Chat" }}
 			/>
 			<Tab.Screen name="payments" component={Payments}
+				initialParams={{ localUser }}
 				options={{ title: "Pagamenti" }}
 			/>
 		</Tab.Navigator>
