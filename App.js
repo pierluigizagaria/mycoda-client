@@ -4,15 +4,16 @@ import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import * as SplashScreen from 'expo-splash-screen';
 import { enableScreens } from 'react-native-screens';
 import { createNativeStackNavigator } from 'react-native-screens/native-stack';
-import { ThemeManager } from 'react-native-ui-lib';
+import { ThemeManager, Colors } from 'react-native-ui-lib';
 import { SocketContextProvider } from './components/SocketContext';
 import PharmacyLogin from './components/auth/PharmacyLogin';
 import UserRegister from './components/auth/UserRegister';
 import UserLogin from './components/auth/UserLogin';
 import Home from './components/Home';
 import ChatRoom from './components/chat/ChatRoom';
-import userData from './helpers/userData';
+import localUserData from './helpers/localUserData';
 import AuthContext from './components/AuthContext';
+import SendPayment from './components/payments/SendPayment';
 
 enableScreens();
 const Stack = createNativeStackNavigator();
@@ -21,47 +22,33 @@ export default class App extends Component {
 
   constructor(props) {
     super(props);
-    this.state = { isSignedIn: false, loading: true, signedInAsPharmacy: false };
+    this.state = { isSignedIn: false, loading: true };
   }
 
   componentDidMount() {
     SplashScreen.preventAutoHideAsync()
-      .then(() => userData.load())
+      .then(() => localUserData.load())
       .then(data => {
-        this.setState({ 
-          loading: false,
-          isSignedIn: !!data?.accessToken,
-          signedInAsPharmacy: data?.type === 'pharmacy', 
-        });
+        this.setState({ loading: false, isSignedIn: !!data?.accessToken, localUser: data });
         return SplashScreen.hideAsync()
       })
       .catch(error => console.error(error));
   }
 
   render() {
-    if (this.state.loading) {
-      return null;
-    }
+    if (this.state.loading) return null;
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar />
         <NavigationContainer theme={MyCodaTheme}>
           <AuthContext.Provider value={{
-            signIn: (signedInAsPharmacy = false) => {
-              this.setState({ isSignedIn: true, signedInAsPharmacy });
-            },
-            signOut: () => {
-              this.setState({ isSignedIn: false });
-            }
+            signIn: localUser => { this.setState({ isSignedIn: true, localUser }); },
+            signOut: () => { this.setState({ isSignedIn: false }); }
           }}>
               {!this.state.isSignedIn ? (
                 <>
                   <Stack.Navigator
-                    screenOptions={{
-                      headerHideShadow: true,
-                      headerTopInsetEnabled: false,
-                      headerShown: false,
-                    }}>
+                    screenOptions={{ headerHideShadow: true, headerTopInsetEnabled: false, headerShown: false }}>
                     <Stack.Screen name="user-login" component={UserLogin}/>
                     <Stack.Screen name="user-register" component={UserRegister}/>
                     <Stack.Screen name="pharmacy-login" component={PharmacyLogin}/>
@@ -70,15 +57,11 @@ export default class App extends Component {
               ) : (
                 <>
                   <SocketContextProvider>
-                    <Stack.Navigator
-                      screenOptions={{
-                        headerHideShadow: true,
-                        headerTopInsetEnabled: false
-                      }}>
+                    <Stack.Navigator screenOptions={{ headerHideShadow: true, headerTopInsetEnabled: false }}>
                       <Stack.Screen
                         name="home"
                         component={Home}
-                        initialParams={{ signedInAsPharmacy: this.state.signedInAsPharmacy }}
+                        initialParams={{ localUser: this.state.localUser }}
                         options={{
                           headerHideBackButton: true,
                           headerTitle: "MyCoda",
@@ -87,7 +70,16 @@ export default class App extends Component {
                       <Stack.Screen
                         name="chat-room"
                         component={ChatRoom}
+                        initialParams={{ localUser: this.state.localUser }}
                         options={({ route }) => ({ title: route.params.name })}
+                      />
+                      <Stack.Screen
+                        name="send-payment"
+                        initialParams={{ localUser: this.state.localUser }}
+                        options={{
+                          headerTitle: "Invia pagamento",
+                        }}
+                        component={SendPayment}
                       />
                     </Stack.Navigator>
                   </SocketContextProvider>
@@ -110,11 +102,19 @@ const MyCodaTheme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    primary: '#FF2D00',
+    primary: '#45C476',
   },
 };
 
+Colors.loadColors({
+  primaryColor: '#45C476',
+  secondaryColor: '#81C3D7',
+  textColor: '#E08E45',
+  errorColor: '#E63B2E',
+  successColor: '#ADC76F',
+  warnColor: '##FF963C',
+});
+
 ThemeManager.setComponentTheme('TextField', {
-  errorColor: '#ff0033',
-  underlineColor: { default: '#d3d3d3', error: 'red', focus: '#FF2D00', disabled: 'gray' }
+  underlineColor: { default: '#d3d3d3', error: 'red', focus: '#45C476', disabled: 'gray' }
 });
