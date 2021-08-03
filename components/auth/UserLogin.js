@@ -1,9 +1,9 @@
 import React, { useState, useContext } from 'react';
-import { Alert, ScrollView } from 'react-native';
+import { Alert, ScrollView, Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/core';
 import { View, TextField, Text, Button } from 'react-native-ui-lib';
 import { API } from '../../config/config';
-import userData from '../../helpers/userData';
+import localUserData from '../../helpers/localUserData';
 
 export default function UserLogin() {
 
@@ -28,7 +28,7 @@ export default function UserLogin() {
 					Alert.alert("Errore", "Credenziali errate");
 					return;
 				}
-				userData.save({
+				localUserData.save({
 					email: json.email,
 					id: json.cf,
 					name: json.nome,
@@ -39,7 +39,7 @@ export default function UserLogin() {
 					accessToken: json.accessToken,
 					refreshToken: json.refreshToken,
 				})
-					.then(() => signIn())
+					.then((data) => signIn(data))
 					.catch(error => {
 						Alert.alert('Errore', 'Si è verificato un errore in fase di login');
 						console.error(error);
@@ -51,33 +51,43 @@ export default function UserLogin() {
 
 	return (
 		<ScrollView>
-			<View flex paddingH-25 paddingT-120 paddingH-30>
-				<Text grey20 text10 marginT-10 marginB-70 center>MyCoda</Text>
+			<View flex paddingH-25 paddingT-100 paddingH-30>
+				<Text grey20 text20 marginT-10 marginB-70 center>MyCoda</Text>
 				<Text grey20 text30 marginB-30>Accedi</Text>
-				<Text red30 text60 marginB-10>Codice Fiscale</Text>
+				<Text primaryColor text60 marginB-10>Codice Fiscale</Text>
 				<TextField text70 dark10
 					placeholder="Il tuo codice fiscale"
 					onChangeText={text => setFiscalCode(text)}
 				/>
-				<Text red30 text60 marginB-10>Password</Text>
+				<Text primaryColor text60 marginB-10>Password</Text>
 				<TextField text70 secureTextEntry dark10
 					placeholder="Password"
 					onChangeText={text => setPassword(text)}
 				/>
 				<View flex top>
-					<Button text70 white background-red30 borderRadius={10} marginT-10
+					<Button text70 white background-primaryColor borderRadius={10} marginT-10
 						label="Accedi"
 						onPress={login}
 					/>
-					<Button link text70 red30 marginT-20
+					<Button link text70 primaryColor marginT-20
 						label="Registrati"
 						onPress={() => navigation.navigate('user-register')}
 					/>
-					<View flex row bottom marginT-30 flex centerH>
+					<View flex row bottom marginT-20 centerH>
 						<Text grey10 text70 centerV>Sei una farmacia? </Text>
-						<Button link text70 red30
+						<Button link text70 primaryColor
 							label="Accedi"
 							onPress={() => navigation.navigate('pharmacy-login')} />
+						<Text grey10 text70 centerV> </Text>
+					</View>
+					<View flex bottom centerH>
+						<Text grey10 text70 centerV>oppure contattaci</Text>
+						<Button link text70 primaryColor
+							label="+39 347 650 3967"
+							onPress={() => Linking.openURL(`tel:+39 347 650 3967`)} />
+						<Button link text70 primaryColor
+							label="+39 327 776 6271"
+							onPress={() => Linking.openURL(`tel:+39 327 776 6271`)} />
 					</View>
 				</View>
 			</View>

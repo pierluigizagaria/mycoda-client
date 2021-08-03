@@ -53,35 +53,35 @@ export default function Register() {
 		<ScrollView>
 			<View flex paddingH-30>
 				<Text grey20 text30 marginV-20>Registrati</Text>
-				<Text red30 text65>Email</Text>
+				<Text primaryColor text65>Email</Text>
 				<TextField text70 placeholder="La tua email" dark10
 					onChangeText={text => setEmail(text)} />
-				<Text red30 text65>Password</Text>
+				<Text primaryColor text65>Password</Text>
 				<TextField text70 placeholder="Password" secureTextEntry dark10
 					error={validation.passwordsDifferent ? "Le password non coincidono" : ""}
 					onChangeText={text => setPassword(text)} />
-				<Text red30 text65>Conferma Password</Text>
+				<Text primaryColor text65>Conferma Password</Text>
 				<TextField text70 placeholder="Reinserisci la tua password" secureTextEntry dark10
 					error={validation.passwordsDifferent ? "Le password non coincidono" : ""}
 					onChangeText={text => setPasswordConfirm(text)} />
-				<Text red30 text65>Nome</Text>
+				<Text primaryColor text65>Nome</Text>
 				<TextField text70 placeholder="Il tuo nome" dark10
 					onChangeText={text => setName(text)} />
-				<Text red30 text65>Cognome</Text>
+				<Text primaryColor text65>Cognome</Text>
 				<TextField text70 placeholder="Il tuo cognome" dark10
 					onChangeText={text => setSurname(text)} />
-				<Text red30 text65>Codice Fiscale</Text>
+				<Text primaryColor text65>Codice Fiscale</Text>
 				<TextField text70 placeholder="Il tuo codice fiscale" dark10
 					onChangeText={text => setFiscalCode(text)} />
-				<Text red30 text65>Telefono</Text>
+				<Text primaryColor text65>Telefono</Text>
 				<TextField text70 placeholder="Il tuo numero di telefono" dark10
 					onChangeText={text => setTelephone(text)} />
 				<View flex top>
-					<Button text70 white background-red30 label="Continua" borderRadius={10} marginT-10
+					<Button text70 white background-primaryColor label="Continua" borderRadius={10} marginT-10
 						onPress={register} />
 					<View flex row top marginB-30 flex centerH marginT-20>
 						<Text grey10 text70 centerV>Hai già un account? </Text>
-						<Button link text70 red30
+						<Button link text70 primaryColor
 							label="Accedi"
 							onPress={() => navigation.navigate('user-login')}
 						/>
