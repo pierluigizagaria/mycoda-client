@@ -2,18 +2,18 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 
 const DATA_TYPE = {
-  USER: 'userData',
+  USER: 'localUserData',
   SECURE: 'userSecureData',
 }
 
-const userData = {
+const localUserData = {
   save: (userInformation, secureData) => {
     return new Promise((resolve, reject) => {
       Promise.all([
         AsyncStorage.setItem(DATA_TYPE.USER, JSON.stringify(userInformation)),
         SecureStore.setItemAsync(DATA_TYPE.SECURE, JSON.stringify(secureData)),
       ])
-        .then(() => resolve())
+        .then(() => resolve({ ...userInformation, ...secureData }))
         .catch(error => reject(error));
     });
   },
@@ -42,4 +42,4 @@ const userData = {
   }
 }
 
-export default userData;
+export default localUserData;
