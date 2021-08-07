@@ -16,7 +16,7 @@ import { useEffect } from 'react';
 export default function Home({ route }) {
 
 	const { localUser } = route.params;
-	const { id: localUserId, type: loginType, accessToken } = localUser;
+	const { type: loginType, accessToken } = localUser;
 
 	const navigation = useNavigation();
 
@@ -45,7 +45,7 @@ export default function Home({ route }) {
 								</Pressable>
 							</View>
 						}>
-						<MenuItem onPress={() => clearDataSignOut()}>Logout</MenuItem>
+						<MenuItem onPress={deleteUserDataSignOut}>Logout</MenuItem>
 					</Menu>
 				)
 			}
@@ -64,22 +64,20 @@ export default function Home({ route }) {
 		.then(json => {
 			if (!('error' in json)) return;
 			Alert.alert("Errore", "Sessione scaduta");
-			clearDataSignOut();
+			deleteUserDataSignOut();
 		})
 		.catch(error => console.error(error));
 	}
 
- const clearDataSignOut = () => {
+ const deleteUserDataSignOut = () => {
 		localUserData.delete()
-			.then(() => {
-				signOut();
-			})
+			.then(signOut)
 			.catch(error => console.error(error));
 	}
 
 	return (
 		<Tab.Navigator initialRouteName="chats" >
-			{!loginType === 'pharmacy' && (
+			{loginType === 'user' && (
 				<Tab.Screen name="pharmacies" component={PharmaciesList}
 					initialParams={{ localUser }}
 					options={{ title: "Farmacie" }}
