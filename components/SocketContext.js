@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import io from "socket.io-client";
 import { REALTIME } from '../config/config';
-import userData from '../helpers/userData';
+import localUserData from '../helpers/localUserData';
 
 export const SocketContext = React.createContext();
 
@@ -10,17 +10,14 @@ export function SocketContextProvider({children}) {
 
   const [socket, setSocket] = useState(null);
 
-  function connect() {
-    userData.load().then((data) =>
-      setSocket(
-        io(`${REALTIME.HOST}`, {
-          query: {
-            authentication: `Bearer ${data.accessToken}`,
-          },
-          jsonp: false,
-        })
-      )
-    );
+  function connect(accessToken) {
+    const socket = io(`${REALTIME.HOST}`, {
+      query: {
+        authentication: `Bearer ${accessToken}`,
+      },
+      jsonp: false,
+    });
+    setSocket(socket);
   };
 
   function disconnect() {
