@@ -1,9 +1,8 @@
 import React, {useEffect, useState, useContext } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { FlatList } from 'react-native';
+import { FlatList, StyleSheet, View, Text } from 'react-native';
 import { API } from '../../config/config';
 import ChatItem from './ChatItem';
-import localUserData from '../../helpers/localUserData';
 import { SocketContext } from '../SocketContext';
 
 export default function Chats({route}) {
@@ -14,7 +13,6 @@ export default function Chats({route}) {
   const navigation = useNavigation();
   
   const [sessions, setSessions] = useState([]);
-  const [socketConnected, setSocketConnected] = useState(false); 
   const [refreshing, setRefreshing] = useState(false);
   const { 
     socket, 
@@ -24,7 +22,7 @@ export default function Chats({route}) {
 
   useEffect(() => {
     fetchSessions();
-    connectSocket();
+    connectSocket(accessToken);
     return () => { 
       disconnectSocket(); 
     };
@@ -51,27 +49,31 @@ export default function Chats({route}) {
 
   const onSocketConnect = () => {
     console.log('Socket connected');
-    setSocketConnected(true);
   };
 
   const onSocketDisconnect = (reason) => {
     console.log(`Socket disconnected: ${reason}`);
-    setSocketConnected(false);
   };
 
   const onSocketPrivateMessage = (payload) => {
-    const updatedSessions = sessions.map(session => (
-      session.userId === payload.from ? ({
-        ...session,
-        newMessagesCount: ++session.newMessagesCount,
-        lastMessage: {
-          ...session.lastMessage,
-          content: payload.message.text,
-          time: payload.message.createdAt,
-        }
-      }) : session
-    ));
-    setSessions([...updatedSessions]);
+    const { newSession, updatedSessions } = sessions.reduce(({updatedSessions}, session) => {
+      if (session.userId === payload.from)
+        updatedSessions.unshift({
+          ...session,
+          newMessagesCount: ++session.newMessagesCount,
+          lastMessage: {
+            ...session.lastMessage,
+            content: payload.message.text,
+            time: payload.message.createdAt,
+          }
+        });
+      else updatedSessions.push(session);
+      return {
+        newSession: !session.userId === payload.from,
+        updatedSessions,
+      }
+    }, { newSession: true, updatedSessions: [] })
+    newSession ? fetchSessions() : setSessions(updatedSessions);
   };
 
   const fetchSessions = () => {
@@ -89,7 +91,23 @@ export default function Chats({route}) {
       setSessions(json);
       setRefreshing(false);
     })
-    .catch(error => console.error(error))
+    .catch(error => {
+      setRefreshing(false);
+      setSessions([]);
+    })
+  };
+
+  const renderChatEmpty = () => {
+    if (refreshing) return null;
+    return (
+      <View style={styles.emptyChatView}>
+        <View style={styles.emptyChatContainer}>
+          <Text style={styles.emptyChatText}>
+{`Cerca e contatta il tuo farmacista di fiducia per i tuoi acquisti.`}
+          </Text>
+        </View>
+      </View>
+    );
   };
 
   return (
@@ -98,6 +116,8 @@ export default function Chats({route}) {
       onRefresh={fetchSessions}
       refreshing={refreshing}
       keyExtractor={item => item.userId}
+      contentContainerStyle={{ flexGrow: 1 }}
+      ListEmptyComponent={renderChatEmpty}
       renderItem={({ item }) => (
         <ChatItem
           userId={item.userId}
@@ -109,3 +129,24 @@ export default function Chats({route}) {
       )}/>
   );
 }
+
+const styles = StyleSheet.create({
+  emptyChatView: {
+    flex: 1,
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyChatContainer: {
+    top: '-10%',
+    backgroundColor: '#45C476',
+    width: '70%',
+    padding: 16,
+    borderRadius: 16,
+  },
+  emptyChatText: {
+    textAlign: 'center',
+    color: 'white',
+    fontSize: 16,
+  }
+});
