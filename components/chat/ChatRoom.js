@@ -1,13 +1,13 @@
 import React, { useContext, useEffect, useState, useRef } from 'react';
-import { StyleSheet, View, ActivityIndicator, Alert, Text, Button, TouchableOpacity } from 'react-native';
-import { GiftedChat, Actions, ActionsProps, Bubble } from 'react-native-gifted-chat';
+import { StyleSheet, View, ActivityIndicator, Text, TouchableOpacity } from 'react-native';
+import { GiftedChat, Actions, Bubble, Time } from 'react-native-gifted-chat';
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
 import 'dayjs/locale/it';
 import { API } from '../../config/config';
 import { SocketContext } from '../SocketContext';
 import { useNavigation, useTheme } from '@react-navigation/native';
 
-export default function ChatRoom({route}) {
+export default function ChatRoom({ route }) {
 
   const { userId, localUser } = route.params;
   const { id: localUserId, type: loginType, accessToken } = localUser;
@@ -16,7 +16,7 @@ export default function ChatRoom({route}) {
 
   const navigation = useNavigation();
   const { colors } = useTheme();
-  
+
   const [messages, setMessages] = useState([]);
   const [messagesOffset, setMessagesOffset] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -30,7 +30,6 @@ export default function ChatRoom({route}) {
   useEffect(loadMessages, []);
 
   useEffect(() => {
-    if (!socket) return;
     socket.on('privateMessage', onSocketPrivateMessage);
     socket.on('messageReaded', onSocketMessageReaded);
     return () => {
@@ -40,8 +39,17 @@ export default function ChatRoom({route}) {
   }, [socket]);
 
   useEffect(() => {
-    if (route.params?.post) {
-      console.log(route.params?.post)
+    if (route.params?.post?.payment) {
+      const { message, payment } = route.params.post.payment;
+      const paymentMessage = {
+        _id: message.id,
+        type: message.tipo,
+        status: message.readed ? 'readed' : 'received',
+        user: { _id: message.mittente },
+        payment,
+      };
+      setMessages(prevMessages => GiftedChat.append(prevMessages, [paymentMessage]));
+      emitSocketPrivateMessage(userId, paymentMessage);
     }
   }, [route.params?.post]);
 
@@ -69,21 +77,28 @@ export default function ChatRoom({route}) {
         'Authorization': `Bearer ${accessToken}`,
       },
     })
-    .then(response => response.json())
-    .then(json => {
-      if ('error' in json) throw new Error(json.error.message);
-      return json.length > 0 ? json.map(message => ({
-        _id: message.id,
-        type: message.tipo,
-        status: message.readed ? 'readed' : 'received',
-        user: { _id: message.mittente },
-        ...(message.tipo === 2 && {
-          text: message.content,
-          createdAt: message.time
-        }),
-        ...(typeof message.tipo === 'undefined' && { payment: message.payment }),
-      })) : [];
-    })
+      .then(response => response.json())
+      .then(json => {
+        if ('error' in json) throw new Error(json.error.message);
+        return json.length > 0 ? json.map(message => ({
+          _id: message.id,
+          type: message.tipo,
+          status: message.readed ? 'readed' : 'received',
+          user: { _id: message.mittente },
+          createdAt: message.time,
+          ...(message.tipo === 1 && {
+            //image: message.location
+            text: 'Immagine',
+          }),
+          ...(message.tipo === 2 && {
+            text: message.content,
+          }),
+          ...(message.tipo === 3 && {
+            payment: message.payment,
+            text: 'Pagamento',
+          }),
+        })) : [];
+      })
   };
 
   async function postMessage({ content, type }) {
@@ -93,22 +108,19 @@ export default function ChatRoom({route}) {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${accessToken}`,
       },
-      body: JSON.stringify({
-        content,
-        msgType: type,
+      body: JSON.stringify({ content, msgType: type })
+    })
+      .then((response) => response.json())
+      .then((json) => {
+        if ('error' in json) throw new Error(json.error.message);
       })
-    })
-    .then((response) => response.json())
-    .then((json) => {
-      if ('error' in json) throw new Error(json.error.message);
-    })
-    .catch((error) => console.error(error))
+      .catch((error) => console.error(error))
   };
 
-  function onSend([ message ]) {
-    const messageSent = { ...message, status: 'sent', type: 2 };
+  function onSend([message]) {
+    const messageSent = { ...message, pending: true, type: 2 };
     setMessages(prevMessages => GiftedChat.append(prevMessages, [messageSent]));
-    postMessage({ content: message.text, type: 2})
+    postMessage({ content: message.text, type: 2 })
       .then(() => {
         if (!socket) return;
         emitSocketPrivateMessage(userId, messageSent);
@@ -117,8 +129,8 @@ export default function ChatRoom({route}) {
 
   function emitSocketPrivateMessage(userId, message) {
     socket.emit('privateMessage', { to: userId, message }, () => {
-      const updatedMessages = messagesRef.current.map(m => 
-        m._id === message._id ? ({ ...m, status: 'received' }) : m
+      const updatedMessages = messagesRef.current.map(m =>
+        m._id === message._id ? ({ ...m, sent: true }) : m
       );
       setMessages(updatedMessages);
     });
@@ -129,9 +141,9 @@ export default function ChatRoom({route}) {
     socket.emit('messageReaded', { to: payload.from, message: payload.message });
   };
 
-  function onSocketMessageReaded({message}) {
+  function onSocketMessageReaded({ message }) {
     const updatedMessages = messagesRef.current.map(m =>
-      m._id === message._id ? ({ ...m, status: 'readed' }) : m
+      m._id === message._id ? ({ ...m, received: true }) : m
     );
     setMessages(updatedMessages);
   }
@@ -142,8 +154,8 @@ export default function ChatRoom({route}) {
       <View style={styles.emptyChatView}>
         <View style={styles.emptyChatContainer}>
           <Text style={styles.emptyChatText}>
-{`Il team MyCoda ti da il benvenuto.
-Avvia una conversazione ora e acquista in sicurezza`} 
+            {`Il team MyCoda ti da il benvenuto.
+Avvia una conversazione ora e acquista in sicurezza`}
           </Text>
         </View>
       </View>
@@ -151,27 +163,27 @@ Avvia una conversazione ora e acquista in sicurezza`}
   };
 
   const renderCustomView = props => {
-    const { currentMessage: message } = props;
-    switch (typeof message.type) {
-      case 'undefined':
+    const { user, type, payment } = props.currentMessage;
+    switch (type) {
+      case 3:
         return (
-          <View style={styles.paymentContainer}>
-            <Text>Pagamento</Text>
-            <TouchableOpacity style={{ 
-              backgroundColor: '#ffc439', 
-              paddingHorizontal: 16, 
+          <View style={{ ...styles.paymentContainer, ...((localUserId !== user._id) && { paddingBottom: 18 }) }}>
+            <Text style={{ paddingBottom: 12, color: 'white' }}>{payment.desc}</Text>
+            <TouchableOpacity style={{
+              backgroundColor: '#ffc439',
+              paddingHorizontal: 16,
               paddingVertical: 8,
               borderRadius: 4,
-              flexDirection: 'row'
-              }}>
-              
-              <Text>Paga con</Text>
+              flexDirection: 'row',
+              alignItems: 'center',
+            }}>
+              <Text>Paga con </Text>
               <FontAwesome name="paypal" size={24} color="black" />
             </TouchableOpacity>
           </View>
         );
       default:
-        return;
+        return null;
     }
   };
 
@@ -189,18 +201,6 @@ Avvia una conversazione ora e acquista in sicurezza`}
     )
   }
 
-  const renderTicks = ({ status, user }) => {
-    if (localUserId !== user._id) return;
-    switch (status) {
-      case 'sent': 
-        return <Ionicons name={"time-outline"} style={styles.messageTicks}/>;
-      case 'received': 
-        return <Ionicons name={"checkmark-sharp"} style={styles.messageTicks}/>;
-      case 'readed': 
-        return <Ionicons name={"checkmark-done-sharp"} style={styles.messageTicks}/>;
-    }
-  }
- 
   return (
     <GiftedChat
       locale={'it'}
@@ -214,16 +214,21 @@ Avvia una conversazione ora e acquista in sicurezza`}
       onSend={onSend}
       onLoadEarlier={loadMessages}
       renderChatEmpty={renderChatEmpty}
-      renderTicks={renderTicks}
+      renderTime={props => <Time {...props} />}
       renderCustomView={renderCustomView}
-      renderLoadEarlier={() => (<ActivityIndicator size="large" color="#d3d3d3"/>)}
+      renderLoadEarlier={() => (<ActivityIndicator size="large" color="#d3d3d3" />)}
       renderBubble={renderBubble}
       renderActions={() => loginType === 'pharmacy' ?
-        (<Actions
-          onPressActionButton={() => { navigation.navigate('send-payment', route.params); }} 
-          icon={() => (<Ionicons name="card" size={24} color={colors.primary}/>)}
+        (<>
+          <Actions
+            onPressActionButton={() => { navigation.navigate('send-payment', route.params); }}
+            icon={() => (<Ionicons name="camera" size={24} color={colors.primary} />)}
           />
-        ) : null
+          <Actions
+            onPressActionButton={() => { navigation.navigate('send-payment', route.params); }}
+            icon={() => (<Ionicons name="card" size={24} color={colors.primary} />)}
+          />
+        </>) : null
       }
     />
   );
@@ -233,7 +238,7 @@ const styles = StyleSheet.create({
   messageTicks: {
     fontSize: 14,
     color: 'white',
-    paddingBottom: 4, 
+    paddingBottom: 4,
     paddingRight: 6,
   },
   emptyChatView: {
@@ -254,6 +259,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   paymentContainer: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 18,
+    paddingTop: 12,
   }
 });

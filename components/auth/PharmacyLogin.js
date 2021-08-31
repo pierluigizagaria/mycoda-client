@@ -65,7 +65,7 @@ export default function PharmacyLogin() {
 						onPress={login}
 					/>
 					<View flex row bottom marginT-30 flex centerH>
-						<Text grey10 text70 centerV>Non sei una farmacia? </Text>
+						<Text grey10 text70 centerV>Non hai una farmacia? </Text>
 						<Button link text70 primaryColor
 							label="Accedi"
 							onPress={() => navigation.navigate('user-login')} />

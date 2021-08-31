@@ -74,7 +74,7 @@ export default function UserLogin() {
 						onPress={() => navigation.navigate('user-register')}
 					/>
 					<View flex row bottom marginT-20 centerH>
-						<Text grey10 text70 centerV>Sei una farmacia? </Text>
+						<Text grey10 text70 centerV>Hai una farmacia? </Text>
 						<Button link text70 primaryColor
 							label="Accedi"
 							onPress={() => navigation.navigate('pharmacy-login')} />

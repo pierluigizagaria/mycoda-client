@@ -8,7 +8,7 @@ import { SocketContext } from '../SocketContext';
 export default function Chats({route}) {
 
   const { localUser } = route.params;
-  const { accessToken } = localUser;
+  const { accessToken, type: loginType } = localUser;
 
   const navigation = useNavigation();
   
@@ -102,8 +102,11 @@ export default function Chats({route}) {
     return (
       <View style={styles.emptyChatView}>
         <View style={styles.emptyChatContainer}>
-          <Text style={styles.emptyChatText}>
-{`Cerca e contatta il tuo farmacista di fiducia per i tuoi acquisti.`}
+          <Text style={styles.emptyChatText}>{ 
+            loginType === 'user' ? 
+              `Cerca e contatta il tuo farmacista di fiducia per i tuoi acquisti.` : 
+              `Quì appariranno le richieste di supporto da parte dei tuoi clienti.`
+          }
           </Text>
         </View>
       </View>
