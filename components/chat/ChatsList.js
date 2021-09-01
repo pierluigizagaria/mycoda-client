@@ -123,9 +123,12 @@ export default function Chats({route}) {
       ListEmptyComponent={renderChatEmpty}
       renderItem={({ item }) => (
         <ChatItem
+          key={item.userId}
           userId={item.userId}
           name={item.displayName}
-          message={item.lastMessage.content}
+          {...(item.lastMessage.tipo === 1 && ({ message: '📷 Immagine' }))}
+          {...(item.lastMessage.tipo === 2 && ({ message: item.lastMessage.content}))}
+          {...(item.lastMessage.tipo === 3 && ({ message: '💳 Pagamento' }))}
           badge={item.newMessagesCount}
           time={item.lastMessage.time}
           imgUri="https://reactnative.dev/img/tiny_logo.png"/>
