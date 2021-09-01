@@ -58,28 +58,17 @@ export default class App extends Component {
                 <>
                   <SocketContextProvider>
                     <Stack.Navigator screenOptions={{ headerHideShadow: true, headerTopInsetEnabled: false }}>
-                      <Stack.Screen
-                        name="home"
-                        component={Home}
+                      <Stack.Screen name="home" component={Home}
                         initialParams={{ localUser: this.state.localUser }}
-                        options={{
-                          headerHideBackButton: true,
-                          headerTitle: "MyCoda",
-                        }}
+                        options={{ headerHideBackButton: true, headerTitle: "MyCoda" }}
                       />
-                      <Stack.Screen
-                        name="chat-room"
-                        component={ChatRoom}
+                      <Stack.Screen name="chat-room" component={ChatRoom}
                         initialParams={{ localUser: this.state.localUser }}
                         options={({ route }) => ({ title: route.params.name })}
                       />
-                      <Stack.Screen
-                        name="send-payment"
+                      <Stack.Screen name="send-payment" component={SendPayment}
                         initialParams={{ localUser: this.state.localUser }}
-                        options={{
-                          headerTitle: "Invia pagamento",
-                        }}
-                        component={SendPayment}
+                        options={{ headerTitle: "Invia pagamento" }}
                       />
                     </Stack.Navigator>
                   </SocketContextProvider>
