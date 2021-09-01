@@ -46,14 +46,14 @@ export default class Pharmacies extends Component {
         keyExtractor={item => item.pIva}
         onRefresh={this.fetchPharmacies}
         refreshing={this.state.refreshing}
-        renderItem={({ item }) => {
-          return <PharmacyItem
+        renderItem={({ item }) => (
+          <PharmacyItem
             navigation={this.props.navigation}
             userId={item.pIva}
             name={item.ragSociale}
             address={item.indirizzo}
             imgUri="https://reactnative.dev/img/tiny_logo.png"/>
-        }}/>
+        )}/>
     );
   }
 }
