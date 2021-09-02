@@ -1,9 +1,10 @@
 import React, { useState, useContext } from 'react';
 import { Alert, ScrollView, Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/core';
-import { View, TextField, Text, Button } from 'react-native-ui-lib';
+import { View, TextField, Text, Button, Image } from 'react-native-ui-lib';
 import { API } from '../../config/config';
 import localUserData from '../../helpers/localUserData';
+import headerLogo from '../../assets/header.png';
 
 export default function UserLogin() {
 
@@ -51,8 +52,10 @@ export default function UserLogin() {
 
 	return (
 		<ScrollView>
-			<View flex paddingH-25 paddingT-100 paddingH-30>
-				<Text grey20 text20 marginT-10 marginB-70 center>MyCoda</Text>
+			<View flex paddingH-30>
+				<View flex center >
+					<Image source={headerLogo} resizeMode={'contain'} style={{ width: 250, height: 250 }} />
+				</View>
 				<Text grey20 text30 marginB-30>Accedi</Text>
 				<Text primaryColor text60 marginB-10>Codice Fiscale</Text>
 				<TextField text70 dark10
