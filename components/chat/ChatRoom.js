@@ -1,11 +1,12 @@
 import React, { useContext, useEffect, useState, useRef } from 'react';
 import { StyleSheet, View, ActivityIndicator, Text, TouchableOpacity } from 'react-native';
-import { GiftedChat, Actions, Bubble, Time } from 'react-native-gifted-chat';
+import { GiftedChat, Actions, Bubble } from 'react-native-gifted-chat';
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
 import 'dayjs/locale/it';
 import { API } from '../../config/config';
 import { SocketContext } from '../SocketContext';
 import { useNavigation, useTheme } from '@react-navigation/native';
+import * as ImagePicker from 'expo-image-picker';
 
 export default function ChatRoom({ route }) {
 
@@ -27,7 +28,7 @@ export default function ChatRoom({ route }) {
   const messagesRef = useRef();
   messagesRef.current = messages;
 
-  useEffect(loadMessages, []);
+  useEffect(() => loadMessages(), []);
 
   useEffect(() => {
     socket.on('privateMessage', onSocketPrivateMessage);
@@ -45,6 +46,7 @@ export default function ChatRoom({ route }) {
         _id: message.id,
         type: message.tipo,
         status: message.readed ? 'readed' : 'received',
+        createdAt: message.time,
         user: { _id: message.mittente },
         payment,
       };
@@ -53,7 +55,7 @@ export default function ChatRoom({ route }) {
     }
   }, [route.params?.post]);
 
-  function loadMessages() {
+  const loadMessages = () => {
     setLoading(true);
     fetchMessages(messagesOffset, MESSAGES_PER_LOAD)
       .then(messages => {
@@ -69,7 +71,7 @@ export default function ChatRoom({ route }) {
       });
   };
 
-  async function fetchMessages(offset, limit) {
+  const fetchMessages = async (offset, limit) => {
     return fetch(`${API.URL}/api/messages/${userId}?offset=${offset}&limit=${limit}`, {
       method: 'GET',
       headers: {
@@ -86,22 +88,14 @@ export default function ChatRoom({ route }) {
           status: message.readed ? 'readed' : 'received',
           user: { _id: message.mittente },
           createdAt: message.time,
-          ...(message.tipo === 1 && {
-            //image: message.location
-            text: 'Immagine',
-          }),
-          ...(message.tipo === 2 && {
-            text: message.content,
-          }),
-          ...(message.tipo === 3 && {
-            payment: message.payment,
-            text: 'Pagamento',
-          }),
+          ...(message.tipo === 1 && { image: message.location }),
+          ...(message.tipo === 2 && { text: message.content }),
+          ...(message.tipo === 3 && { payment: message.payment }),
         })) : [];
       })
   };
 
-  async function postMessage({ content, type }) {
+  const postMessage = async ({ content, type }) => {
     return fetch(`${API.URL}/api/messages/${userId}`, {
       method: 'POST',
       headers: {
@@ -117,8 +111,8 @@ export default function ChatRoom({ route }) {
       .catch((error) => console.error(error))
   };
 
-  function onSend([message]) {
-    const messageSent = { ...message, pending: true, type: 2 };
+  const onSend = ([message]) => {
+    const messageSent = { ...message, status: 'sent', type: 2 };
     setMessages(prevMessages => GiftedChat.append(prevMessages, [messageSent]));
     postMessage({ content: message.text, type: 2 })
       .then(() => {
@@ -127,26 +121,74 @@ export default function ChatRoom({ route }) {
       });
   };
 
-  function emitSocketPrivateMessage(userId, message) {
+  const emitSocketPrivateMessage = (userId, message) => {
     socket.emit('privateMessage', { to: userId, message }, () => {
       const updatedMessages = messagesRef.current.map(m =>
-        m._id === message._id ? ({ ...m, sent: true }) : m
+        m._id === message._id ? ({ ...m, status: 'received' }) : m
       );
       setMessages(updatedMessages);
     });
   };
 
-  function onSocketPrivateMessage(payload) {
-    setMessages((prevMessages) => GiftedChat.append(prevMessages, payload.message));
+  const onSocketPrivateMessage = payload => {
+    if (userId !== payload.from) return;
+    setMessages(prevMessages => GiftedChat.append(prevMessages, payload.message));
     socket.emit('messageReaded', { to: payload.from, message: payload.message });
   };
 
-  function onSocketMessageReaded({ message }) {
+  const onSocketMessageReaded = ({ message }) => {
     const updatedMessages = messagesRef.current.map(m =>
-      m._id === message._id ? ({ ...m, received: true }) : m
+      m._id === message._id ? ({ ...m, status: 'readed' }) : m
     );
     setMessages(updatedMessages);
   }
+
+
+  const openPaymentModal = url => {
+    navigation.navigate('paypal-web-modal', { uri: url });
+  };
+
+  const onCameraAction = () => {
+    ImagePicker.launchCameraAsync()
+      .then(({ cancelled, uri }) => {
+        if (cancelled) return;
+        uploadPicture(uri)
+          .then(json => {
+            const pictureMessage = {
+              _id: json.message.id,
+              type: json.message.tipo,
+              status: 'sent',
+              user: { _id: localUserId },
+              createdAt: json.message.time,
+              image: json.message.location,
+            };
+            setMessages(prevMessages => GiftedChat.append(prevMessages, pictureMessage))
+            emitSocketPrivateMessage(userId, pictureMessage);
+          })
+          .catch(error => console.error(error));
+      })
+      .catch(error => console.error(error));
+  };
+
+  const onPaymentAction = () => {
+    navigation.navigate('send-payment', route.params);
+  }
+
+  const uploadPicture = async localUri => {
+    let filename = localUri.split('/').pop();
+    let match = /\.(\w+)$/.exec(filename);
+    let type = match ? `image/${match[1]}` : `image`;
+    let formData = new FormData();
+    formData.append('image', { uri: localUri, name: filename, type });
+    const response = await fetch(`${API.URL}/api/images/${userId}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+      body: formData,
+    });
+    return await response.json();
+  };
 
   const renderChatEmpty = () => {
     if (loading) return null;
@@ -163,20 +205,16 @@ Avvia una conversazione ora e acquista in sicurezza`}
   };
 
   const renderCustomView = props => {
-    const { user, type, payment } = props.currentMessage;
+    const { type, payment, user } = props.currentMessage;
     switch (type) {
       case 3:
         return (
-          <View style={{ ...styles.paymentContainer, ...((localUserId !== user._id) && { paddingBottom: 18 }) }}>
-            <Text style={{ paddingBottom: 12, color: 'white' }}>{payment.desc}</Text>
-            <TouchableOpacity style={{
-              backgroundColor: '#ffc439',
-              paddingHorizontal: 16,
-              paddingVertical: 8,
-              borderRadius: 4,
-              flexDirection: 'row',
-              alignItems: 'center',
-            }}>
+          <View style={styles.paymentContainer}>
+            <Text style={styles.paymentText}>{payment.description}</Text>
+            <Text style={styles.paymentAmount}>{`${payment.somma} €`}</Text>
+            <TouchableOpacity style={styles.paymentButton} 
+              disabled={user._id === localUserId}
+              onPress={() => openPaymentModal(payment.approvalUrl)}>
               <Text>Paga con </Text>
               <FontAwesome name="paypal" size={24} color="black" />
             </TouchableOpacity>
@@ -187,7 +225,20 @@ Avvia una conversazione ora e acquista in sicurezza`}
     }
   };
 
+  const renderTicks = ({ status, user }) => {
+    if (localUserId !== user._id) return;
+    switch (status) {
+      case 'sent':
+        return <Ionicons name={"time-outline"} style={styles.messageTicks} />;
+      case 'received':
+        return <Ionicons name={"checkmark-sharp"} style={styles.messageTicks} />;
+      case 'readed':
+        return <Ionicons name={"checkmark-done-sharp"} style={styles.messageTicks} />;
+    }
+  };
+
   const renderBubble = props => {
+    const { type } = props.currentMessage;
     return (
       <Bubble
         {...props}
@@ -196,10 +247,18 @@ Avvia una conversazione ora e acquista in sicurezza`}
           left: { color: 'white', fontSize: 12 },
           right: { color: 'white', fontSize: 12 },
         }}
-        wrapperStyle={{ left: { backgroundColor: colors.primary } }}
+        wrapperStyle={{ 
+          right: {
+            ...(type === 3 && ({width: '50%'})),
+          },
+          left: { 
+            ...(type === 3 && ({ width: '50%' })),
+            backgroundColor: colors.primary 
+          } 
+        }}
       />
     )
-  }
+  };
 
   return (
     <GiftedChat
@@ -214,21 +273,21 @@ Avvia una conversazione ora e acquista in sicurezza`}
       onSend={onSend}
       onLoadEarlier={loadMessages}
       renderChatEmpty={renderChatEmpty}
-      renderTime={props => <Time {...props} />}
       renderCustomView={renderCustomView}
-      renderLoadEarlier={() => (<ActivityIndicator size="large" color="#d3d3d3" />)}
+      renderTicks={renderTicks}
       renderBubble={renderBubble}
-      renderActions={() => loginType === 'pharmacy' ?
-        (<>
+      renderLoadEarlier={() => (<ActivityIndicator size="large" color="#d3d3d3" />)}
+      renderActions={() => 
+        <>
+          { loginType === 'pharmacy' && (
+            <Actions
+              onPressActionButton={onPaymentAction}
+              icon={() => (<Ionicons name="card" size={24} color={colors.primary} />)}/>
+          )} 
           <Actions
-            onPressActionButton={() => { navigation.navigate('send-payment', route.params); }}
             icon={() => (<Ionicons name="camera" size={24} color={colors.primary} />)}
-          />
-          <Actions
-            onPressActionButton={() => { navigation.navigate('send-payment', route.params); }}
-            icon={() => (<Ionicons name="card" size={24} color={colors.primary} />)}
-          />
-        </>) : null
+            onPressActionButton={onCameraAction}/>
+        </>
       }
     />
   );
@@ -259,7 +318,38 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   paymentContainer: {
-    paddingHorizontal: 18,
-    paddingTop: 12,
-  }
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  paymentText: { 
+    paddingBottom: 8, 
+    color: 'white' 
+  },
+  paymentAmount: {
+    textAlign: 'center',
+    fontSize: 24,
+    paddingBottom: 8,
+    fontWeight: 'bold',
+    color: 'white'
+  },
+  paymentButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#ffc439',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 4,
+  },
+  modal: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)'
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    width: '100%',
+    height: '100%',
+  },
 });

@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useContext } from 'react';
+import React, {useEffect, useState, useContext, useRef } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { FlatList, StyleSheet, View, Text } from 'react-native';
 import { API } from '../../config/config';
@@ -6,14 +6,20 @@ import ChatItem from './ChatItem';
 import { SocketContext } from '../SocketContext';
 
 export default function Chats({route}) {
-
+  const navigation = useNavigation();
+  
   const { localUser } = route.params;
   const { accessToken, type: loginType } = localUser;
 
-  const navigation = useNavigation();
-  
-  const [sessions, setSessions] = useState([]);
+  const [sessions, _setSessions] = useState([]);
+  const sessionsRef = useRef(sessions);
+  const setSessions = sessions => {
+    sessionsRef.current = sessions;
+    _setSessions(sessions);
+  }
+
   const [refreshing, setRefreshing] = useState(false);
+
   const { 
     socket, 
     connect: connectSocket, 
@@ -38,14 +44,9 @@ export default function Chats({route}) {
       socket.off('disconnect', onSocketDisconnect);
       socket.off('privateMessage', onSocketPrivateMessage);
     }
-  }, [socket, sessions]);
+  }, [socket]);
 
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
-      fetchSessions();
-    });
-    return unsubscribe;
-  }, [navigation]);
+  useEffect(() => navigation.addListener('focus', fetchSessions), [navigation]);
 
   const onSocketConnect = () => {
     console.log('Socket connected');
@@ -56,7 +57,8 @@ export default function Chats({route}) {
   };
 
   const onSocketPrivateMessage = (payload) => {
-    const { newSession, updatedSessions } = sessions.reduce(({updatedSessions}, session) => {
+    const currentSessions = sessionsRef.current;
+    const { newSession, updatedSessions } = currentSessions.reduce(({updatedSessions}, session) => {
       if (session.userId === payload.from)
         updatedSessions.unshift({
           ...session,
@@ -126,12 +128,12 @@ export default function Chats({route}) {
           key={item.userId}
           userId={item.userId}
           name={item.displayName}
-          {...(item.lastMessage.tipo === 1 && ({ message: '📷 Immagine' }))}
-          {...(item.lastMessage.tipo === 2 && ({ message: item.lastMessage.content}))}
-          {...(item.lastMessage.tipo === 3 && ({ message: '💳 Pagamento' }))}
           badge={item.newMessagesCount}
-          time={item.lastMessage.time}
-          imgUri="https://reactnative.dev/img/tiny_logo.png"/>
+          imgUri="https://reactnative.dev/img/tiny_logo.png"
+          time={item.lastMessage?.time}
+          {...(item.lastMessage?.tipo === 1 && ({ message: '📷 Immagine' }))}
+          {...(item.lastMessage?.tipo === 2 && ({ message: item.lastMessage.content}))}
+          {...(item.lastMessage?.tipo === 3 && ({ message: '💳 Pagamento' }))}/>
       )}/>
   );
 }
