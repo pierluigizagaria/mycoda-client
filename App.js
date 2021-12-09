@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { StatusBar, SafeAreaView, StyleSheet  } from 'react-native';
+import { StatusBar, SafeAreaView, StyleSheet } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import * as SplashScreen from 'expo-splash-screen';
 import { enableScreens } from 'react-native-screens';
@@ -46,43 +46,43 @@ export default class App extends Component {
             signIn: localUser => { this.setState({ isSignedIn: true, localUser }); },
             signOut: () => { this.setState({ isSignedIn: false }); }
           }}>
-              {!this.state.isSignedIn ? (
-                <>
-                  <Stack.Navigator
-                    screenOptions={{ headerHideShadow: true, headerTopInsetEnabled: false, headerShown: false }}>
-                    <Stack.Screen name="user-login" component={UserLogin}/>
-                    <Stack.Screen name="user-register" component={UserRegister}/>
-                    <Stack.Screen name="pharmacy-login" component={PharmacyLogin}/>
+            {!this.state.isSignedIn ? (
+              <>
+                <Stack.Navigator
+                  screenOptions={{ headerHideShadow: true, headerTopInsetEnabled: false, headerShown: false }}>
+                  <Stack.Screen name="user-login" component={UserLogin} />
+                  <Stack.Screen name="user-register" component={UserRegister} />
+                  <Stack.Screen name="pharmacy-login" component={PharmacyLogin} />
+                </Stack.Navigator>
+              </>
+            ) : (
+              <>
+                <SocketContextProvider>
+                  <Stack.Navigator screenOptions={{ headerHideShadow: true, headerTopInsetEnabled: false }}>
+                    <Stack.Screen name="home" component={Home}
+                      initialParams={{ localUser: this.state.localUser }}
+                      options={{ headerHideBackButton: true, headerTitle: "MyCoda" }}
+                    />
+                    <Stack.Screen name="chat-room" component={ChatRoom}
+                      initialParams={{ localUser: this.state.localUser }}
+                      options={({ route }) => ({ title: route.params.name })}
+                    />
+                    <Stack.Screen name="send-payment" component={SendPayment}
+                      initialParams={{ localUser: this.state.localUser }}
+                      options={{ headerTitle: "Invia pagamento" }}
+                    />
+                    <Stack.Screen name="paypal-web-modal" component={WebModal}
+                      options={{ presentation: 'modal', headerTitle: 'Pagamento' }}
+                    />
                   </Stack.Navigator>
-                </>
-              ) : (
-                <>
-                  <SocketContextProvider>
-                    <Stack.Navigator screenOptions={{ headerHideShadow: true, headerTopInsetEnabled: false }}>
-                      <Stack.Screen name="home" component={Home}
-                        initialParams={{ localUser: this.state.localUser }}
-                        options={{ headerHideBackButton: true, headerTitle: "MyCoda" }}
-                      />
-                      <Stack.Screen name="chat-room" component={ChatRoom}
-                        initialParams={{ localUser: this.state.localUser }}
-                        options={({ route }) => ({ title: route.params.name })}
-                      />
-                      <Stack.Screen name="send-payment" component={SendPayment}
-                        initialParams={{ localUser: this.state.localUser }}
-                        options={{ headerTitle: "Invia pagamento" }}
-                      />
-                      <Stack.Screen name="paypal-web-modal" component={WebModal}
-                        options={{ presentation: 'modal', headerTitle: 'Pagamento' }}
-                      />
-                    </Stack.Navigator>
-                  </SocketContextProvider>
-                </>
-              )}
+                </SocketContextProvider>
+              </>
+            )}
           </AuthContext.Provider>
         </NavigationContainer>
       </SafeAreaView>
     );
-  } 
+  }
 }
 
 const styles = StyleSheet.create({

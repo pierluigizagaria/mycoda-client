@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "845222563101",
+    "project_id": "mycoda-d83a7",
+    "storage_bucket": "mycoda-d83a7.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:845222563101:android:1740c97d3b42c7be02e5f4",
+        "android_client_info": {
+          "package_name": "com.mycoda"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "845222563101-tf1e8ggrvcerdcsfvvd3fvnas9ei6aon.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAXbrwwOIASmIJ5b6VxcT5UtBbADfXO3PE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "845222563101-tf1e8ggrvcerdcsfvvd3fvnas9ei6aon.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
