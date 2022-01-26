@@ -1,13 +1,13 @@
-import React, {useEffect, useState, useContext, useRef } from 'react';
+import React, { useEffect, useState, useContext, useRef } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { FlatList, StyleSheet, View, Text } from 'react-native';
 import { API } from '../../config/config';
 import ChatItem from './ChatItem';
 import { SocketContext } from '../SocketContext';
 
-export default function Chats({route}) {
+export default function Chats({ route }) {
   const navigation = useNavigation();
-  
+
   const { localUser } = route.params;
   const { accessToken, type: loginType } = localUser;
 
@@ -20,17 +20,17 @@ export default function Chats({route}) {
 
   const [refreshing, setRefreshing] = useState(false);
 
-  const { 
-    socket, 
-    connect: connectSocket, 
+  const {
+    socket,
+    connect: connectSocket,
     disconnect: disconnectSocket
   } = useContext(SocketContext);
 
   useEffect(() => {
     fetchSessions();
     connectSocket(accessToken);
-    return () => { 
-      disconnectSocket(); 
+    return () => {
+      disconnectSocket();
     };
   }, []);
 
@@ -58,7 +58,7 @@ export default function Chats({route}) {
 
   const onSocketPrivateMessage = (payload) => {
     const currentSessions = sessionsRef.current;
-    const { newSession, updatedSessions } = currentSessions.reduce(({updatedSessions}, session) => {
+    const { newSession, updatedSessions } = currentSessions.reduce(({ updatedSessions }, session) => {
       if (session.userId === payload.from)
         updatedSessions.unshift({
           ...session,
@@ -87,16 +87,16 @@ export default function Chats({route}) {
         'Authorization': `Bearer ${accessToken}`,
       },
     })
-    .then(response => response.json())
-    .then(json => {
-      if ('error' in json) throw new Error(json.error.message);
-      setSessions(json);
-      setRefreshing(false);
-    })
-    .catch(error => {
-      setRefreshing(false);
-      setSessions([]);
-    })
+      .then(response => response.json())
+      .then(json => {
+        if ('error' in json) throw new Error(json.error.message);
+        setSessions(json);
+        setRefreshing(false);
+      })
+      .catch(error => {
+        setRefreshing(false);
+        setSessions([]);
+      })
   };
 
   const renderChatEmpty = () => {
@@ -104,9 +104,9 @@ export default function Chats({route}) {
     return (
       <View style={styles.emptyChatView}>
         <View style={styles.emptyChatContainer}>
-          <Text style={styles.emptyChatText}>{ 
-            loginType === 'user' ? 
-              `Cerca e contatta il tuo farmacista di fiducia per i tuoi acquisti.` : 
+          <Text style={styles.emptyChatText}>{
+            loginType === 'user' ?
+              `Cerca e contatta il tuo farmacista di fiducia per i tuoi acquisti.` :
               `Quì appariranno le richieste di supporto da parte dei tuoi clienti.`
           }
           </Text>
@@ -132,9 +132,9 @@ export default function Chats({route}) {
           imgUri="https://reactnative.dev/img/tiny_logo.png"
           time={item.lastMessage?.time}
           {...(item.lastMessage?.tipo === 1 && ({ message: '📷 Immagine' }))}
-          {...(item.lastMessage?.tipo === 2 && ({ message: item.lastMessage.content}))}
-          {...(item.lastMessage?.tipo === 3 && ({ message: '💳 Pagamento' }))}/>
-      )}/>
+          {...(item.lastMessage?.tipo === 2 && ({ message: item.lastMessage.content }))}
+          {...(item.lastMessage?.tipo === 3 && ({ message: '💳 Pagamento' }))} />
+      )} />
   );
 }
 

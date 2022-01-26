@@ -15,6 +15,8 @@ import localUserData from './helpers/localUserData';
 import AuthContext from './components/AuthContext';
 import SendPayment from './components/payments/SendPayment';
 import WebModal from './components/WebModal';
+import { registerForPushNotificationsAsync } from './components/notification';
+import * as Notifications from 'expo-notifications';
 
 enableScreens();
 const Stack = createNativeStackNavigator();
@@ -26,11 +28,27 @@ export default class App extends Component {
     this.state = { isSignedIn: false, loading: true };
   }
 
+  registerDefaultChannel() {
+    Notifications.setNotificationChannelAsync('default', {
+      name: 'default',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#FF231F7C',
+    });
+  }
+
   componentDidMount() {
     SplashScreen.preventAutoHideAsync()
       .then(() => localUserData.load())
       .then(data => {
         this.setState({ loading: false, isSignedIn: !!data?.accessToken, localUser: data });
+        this.registerDefaultChannel();
+        registerForPushNotificationsAsync(data.accessToken)
+          .then((res) => res.json())
+          .then((json) => console.log(json))
+        Notifications.addNotificationReceivedListener(notification => {
+          console.log(notification);
+        });
         return SplashScreen.hideAsync()
       })
       .catch(error => console.error(error));

@@ -8,9 +8,9 @@ import localUserData from '../../helpers/localUserData';
 export default class Pharmacies extends Component {
   constructor(props) {
     super(props);
-    this.state = { 
-      pharmacies: [], 
-      refreshing: false 
+    this.state = {
+      pharmacies: [],
+      refreshing: false
     };
     this.fetchPharmacies = this.fetchPharmacies.bind(this);
   }
@@ -32,9 +32,9 @@ export default class Pharmacies extends Component {
         });
       })
       .then(response => response.json())
-      .then(json => this.setState({ 
-        pharmacies: json, 
-        refreshing: false 
+      .then(json => this.setState({
+        pharmacies: json,
+        refreshing: false
       }))
       .catch(error => console.error(error))
   }
@@ -48,12 +48,13 @@ export default class Pharmacies extends Component {
         refreshing={this.state.refreshing}
         renderItem={({ item }) => (
           <PharmacyItem
+            key={item.pIva}
             navigation={this.props.navigation}
             userId={item.pIva}
             name={item.ragSociale}
             address={item.indirizzo}
-            imgUri="https://reactnative.dev/img/tiny_logo.png"/>
-        )}/>
+            imgUri="https://reactnative.dev/img/tiny_logo.png" />
+        )} />
     );
   }
 }
